@@ -3,6 +3,10 @@ from django.conf import settings
 from django.db import models
 
 
+def generate_public_token():
+    return uuid.uuid4().hex
+
+
 class StoredFile(models.Model):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -15,7 +19,7 @@ class StoredFile(models.Model):
     last_downloaded_at = models.DateTimeField(null=True, blank=True)
     comment = models.TextField(blank=True)
     storage_path = models.CharField(max_length=500)
-    public_token = models.CharField(max_length=64, unique=True, default=lambda: uuid.uuid4().hex)
+    public_token = models.CharField(max_length=64, unique=True, default=generate_public_token)
 
     class Meta:
         ordering = ["-uploaded_at"]
