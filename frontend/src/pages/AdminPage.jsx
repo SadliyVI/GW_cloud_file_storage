@@ -2,12 +2,22 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
-import { fetchUsers, deleteUser, updateUserAdminFlag } from "../features/users/usersSlice.js";
+import {
+    deleteUser,
+    fetchUsers,
+    updateUserAdminFlag
+} from "../features/users/usersSlice.js";
+
+import FormAlert from "../components/FormAlert.jsx";
+import { getAnyError } from "../utils/errors.js";
 
 function formatBytes(bytes) {
-    if (!bytes) return "0 Б";
-    const units = ["Б", "КБ", "МБ", "ГБ"];
-    let size = bytes;
+    if (!bytes) {
+        return "0 Б";
+    }
+
+    const units = ["Б", "КБ", "МБ", "ГБ", "ТБ"];
+    let size = Number(bytes);
     let index = 0;
 
     while (size >= 1024 && index < units.length - 1) {
@@ -20,6 +30,7 @@ function formatBytes(bytes) {
 
 export default function AdminPage() {
     const dispatch = useDispatch();
+
     const { items, loading, error } = useSelector((state) => state.users);
     const currentUser = useSelector((state) => state.auth.user);
 
@@ -27,41 +38,75 @@ export default function AdminPage() {
         dispatch(fetchUsers());
     }, [dispatch]);
 
-    function handleDelete(userId) {
-        if (window.confirm("Удалить пользователя и все его файлы?")) {
+    function handleDelete(userId, username) {
+        const confirmed = window.confirm(
+            `Удалить пользователя "${username}" и все его файлы?`
+        );
+
+        if (confirmed) {
             dispatch(deleteUser(userId));
         }
     }
 
     function toggleAdmin(user) {
-        dispatch(updateUserAdminFlag({ userId: user.id, is_staff: !user.is_staff }));
+        dispatch(
+            updateUserAdminFlag({
+                userId: user.id,
+                is_staff: !user.is_staff
+            })
+        );
     }
 
     return (
         <section className="card wide">
-            <h1>Администрирование</h1>
+            <div className="page-header">
+                <div>
+                    <h1>Административный интерфейс</h1>
 
-            <p>
-                В этом разделе администратор управляет пользователями и может перейти в
-                файловое хранилище любого пользователя.
-            </p>
+                    <p className="muted">
+                        Раздел доступен только пользователям с признаком администратора.
+                        Здесь можно управлять пользователями и их файловыми хранилищами.
+                    </p>
+                </div>
 
-            {loading && <p>Загрузка...</p>}
-            {error && <pre className="error-box">{JSON.stringify(error, null, 2)}</pre>}
+                <Link className="button secondary" to="/storage">
+                    Моё хранилище
+                </Link>
+            </div>
+
+            {loading && <p>Загрузка списка пользователей...</p>}
+
+            {error && (
+                <FormAlert
+                    type="error"
+                    message={getAnyError(error) || "Не удалось загрузить пользователей."}
+                />
+            )}
 
             <div className="table-wrapper">
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Логин</th>
-                            <th>Полное имя</th>
-                            <th>Email</th>
-                            <th>Админ</th>
-                            <th>Файлов</th>
-                            <th>Размер</th>
-                            <th>Хранилище</th>
-                            <th>Действия</th>
+                            <th title="Внутренний идентификатор пользователя">ID</th>
+                            <th title="Логин пользователя">Логин</th>
+                            <th title="Полное имя, указанное при регистрации">
+                                Полное имя
+                            </th>
+                            <th title="Email, указанный при регистрации">Email</th>
+                            <th title="Признак администратора">Администратор</th>
+                            <th title="Количество файлов в хранилище пользователя">
+                                Файлов
+                            </th>
+                            <th title="Общий размер файлов пользователя">
+                                Размер хранилища
+                            </th>
+                            <th title="Путь к папке хранилища пользователя">
+                                Папка хранилища
+                            </th>
+                            <th title="Переход к управлению файлами пользователя">
+                                Файлы
+                            </th>
+                            <th title="Действия администратора">Действия</th>
                         </tr>
                     </thead>
 
@@ -69,34 +114,73 @@ export default function AdminPage() {
                         {items.map((user) => (
                             <tr key={user.id}>
                                 <td>{user.id}</td>
-                                <td>{user.username}</td>
+
+                                <td>
+                                    <strong>{user.username}</strong>
+                                </td>
+
                                 <td>{user.full_name}</td>
+
                                 <td>{user.email}</td>
+
                                 <td>
-                                    <input
-                                        type="checkbox"
-                                        checked={user.is_staff}
-                                        onChange={() => toggleAdmin(user)}
-                                        disabled={user.id === currentUser.id}
-                                        title="Изменение признака администратора"
-                                    />
+                                    <label className="checkbox-label">
+                                        <input
+                                            type="checkbox"
+                                            checked={user.is_staff}
+                                            onChange={() => toggleAdmin(user)}
+                                            disabled={user.id === currentUser.id}
+                                            title={
+                                                user.id === currentUser.id
+                                                    ? "Нельзя снять права администратора с текущего пользователя"
+                                                    : "Изменить признак администратора"
+                                            }
+                                        />
+
+                                        <span>{user.is_staff ? "Да" : "Нет"}</span>
+                                    </label>
                                 </td>
-                                <td>{user.files_count}</td>
+
+                                <td>{user.files_count ?? 0}</td>
+
                                 <td>{formatBytes(user.files_size)}</td>
+
                                 <td>
-                                    <Link to={`/storage/${user.id}`}>Открыть</Link>
+                                    <code>{user.storage_path}</code>
                                 </td>
+
+                                <td>
+                                    <Link
+                                        className="button small"
+                                        to={`/storage/${user.id}`}
+                                        title="Открыть интерфейс управления файлами этого пользователя"
+                                    >
+                                        Открыть
+                                    </Link>
+                                </td>
+
                                 <td>
                                     <button
                                         className="danger"
-                                        onClick={() => handleDelete(user.id)}
+                                        onClick={() => handleDelete(user.id, user.username)}
                                         disabled={user.id === currentUser.id}
+                                        title={
+                                            user.id === currentUser.id
+                                                ? "Нельзя удалить текущего пользователя"
+                                                : "Удалить пользователя и его файлы"
+                                        }
                                     >
                                         Удалить
                                     </button>
                                 </td>
                             </tr>
                         ))}
+
+                        {!items.length && !loading && (
+                            <tr>
+                                <td colSpan="10">Пользователи не найдены.</td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>

@@ -1,3 +1,4 @@
+import os
 from rest_framework import serializers
 from .models import StoredFile
 
@@ -29,8 +30,5 @@ class StoredFileSerializer(serializers.ModelSerializer):
         ]
 
     def get_public_url(self, obj):
-        request = self.context.get("request")
-        url = f"/api/storage/public/{obj.public_token}/download/"
-        if request:
-            return request.build_absolute_uri(url)
-        return url
+        frontend_url = os.getenv("FRONTEND_URL", "http://127.0.0.1:5173")
+        return f"{frontend_url}/public/{obj.public_token}"

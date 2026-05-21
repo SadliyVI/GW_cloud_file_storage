@@ -16,6 +16,8 @@ import NotFoundPage from "./pages/NotFoundPage.jsx";
 import { fetchCurrentUser } from "./features/auth/authSlice.js";
 import { api } from "./api/client.js";
 
+import PublicDownloadPage from "./pages/PublicDownloadPage.jsx";
+
 export default function App() {
     const dispatch = useDispatch();
 
@@ -34,10 +36,14 @@ export default function App() {
     return (
         <>
             <Navbar />
+
             <main className="container">
                 <Routes>
                     <Route path="/" element={<HomePage />} />
-                    <Route path="/login" element={<LoginPage />} />
+
+                    <Route path="/login" element={<LoginPage mode="user" />} />
+                    <Route path="/login/admin" element={<LoginPage mode="admin" />} />
+
                     <Route path="/register" element={<RegisterPage />} />
 
                     <Route
@@ -66,6 +72,8 @@ export default function App() {
                             </AdminRoute>
                         }
                     />
+
+                    <Route path="/public/:token" element={<PublicDownloadPage />} />
 
                     <Route path="*" element={<NotFoundPage />} />
                 </Routes>

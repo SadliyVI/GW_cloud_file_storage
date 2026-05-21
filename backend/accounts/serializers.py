@@ -39,12 +39,14 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(exc.messages)
 
         if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("Пользователь с таким логином уже существует!")
+            raise serializers.ValidationError("Пользователь с таким логином уже существует.")
+
         return value
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Пользователь с таким email уже существует!")
+            raise serializers.ValidationError("Пользователь с таким email уже существует.")
+
         return value
 
     def validate_password(self, value):

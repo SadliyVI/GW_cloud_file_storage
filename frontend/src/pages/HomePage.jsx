@@ -5,31 +5,79 @@ export default function HomePage() {
     const user = useSelector((state) => state.auth.user);
 
     return (
-        <section className="card">
-            <h1>Облачное файловое хранилище GW Cloud</h1>
+        <section className="home">
+            <div className="card home-hero">
+                <h1>GW Cloud File Storage</h1>
 
-            <p>
-                Приложение позволяет пользователям хранить файлы на сервере, загружать
-                новые документы, скачивать их, переименовывать, удалять и создавать
-                обезличенные публичные ссылки для внешнего доступа.
-            </p>
+                <p>
+                    Облачное файловое хранилище для загрузки, хранения, скачивания,
+                    переименования и публикации файлов по специальным ссылкам.
+                </p>
 
-            <ul>
-                <li>Регистрация и вход пользователей.</li>
-                <li>Личное файловое хранилище для каждого пользователя.</li>
-                <li>Административное управление пользователями и их файлами.</li>
-                <li>Публичные ссылки без раскрытия имени пользователя и имени файла.</li>
-            </ul>
+                <p>
+                    Выберите нужный вариант входа в систему.
+                </p>
+            </div>
 
-            {!user ? (
-                <div className="actions">
-                    <Link className="button" to="/register">Зарегистрироваться</Link>
-                    <Link className="button secondary" to="/login">Войти</Link>
+            {!user && (
+                <div className="home-actions-grid">
+                    <article className="home-action-card">
+                        <h2>Вход пользователя</h2>
+                        <p>
+                            Используйте этот раздел, если у вас уже есть учётная запись
+                            обычного пользователя.
+                        </p>
+
+                        <Link className="button" to="/login">
+                            Войти как пользователь
+                        </Link>
+                    </article>
+
+                    <article className="home-action-card">
+                        <h2>Регистрация</h2>
+                        <p>
+                            Создайте новую учётную запись пользователя для работы с личным
+                            файловым хранилищем.
+                        </p>
+
+                        <Link className="button secondary" to="/register">
+                            Зарегистрироваться
+                        </Link>
+                    </article>
+
+                    <article className="home-action-card admin-card">
+                        <h2>Вход администратора</h2>
+                        <p>
+                            Раздел предназначен для пользователей с признаком администратора.
+                            После входа откроется панель управления пользователями.
+                        </p>
+
+                        <Link className="button admin-button" to="/login/admin">
+                            Войти как администратор
+                        </Link>
+                    </article>
                 </div>
-            ) : (
-                <div className="actions">
-                    <Link className="button" to="/storage">Перейти в хранилище</Link>
-                    {user.is_staff && <Link className="button secondary" to="/admin">Администрирование</Link>}
+            )}
+
+            {user && (
+                <div className="card">
+                    <h2>Вы уже вошли в систему</h2>
+
+                    <p>
+                        Текущий пользователь: <strong>{user.username}</strong>
+                    </p>
+
+                    <div className="actions">
+                        <Link className="button" to="/storage">
+                            Перейти в моё хранилище
+                        </Link>
+
+                        {user.is_staff && (
+                            <Link className="button admin-button" to="/admin">
+                                Перейти в панель администратора
+                            </Link>
+                        )}
+                    </div>
                 </div>
             )}
         </section>

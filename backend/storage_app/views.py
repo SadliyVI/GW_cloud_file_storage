@@ -167,6 +167,32 @@ def download_file_view(request, file_id):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+def public_file_info_view(request, token):
+    try:
+        file_obj = StoredFile.objects.get(public_token=token)
+    except StoredFile.DoesNotExist:
+        return Response(
+            {"detail": "Файл не найден!"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    if not os.path.exists(file_obj.storage_path):
+        return Response(
+            {"detail": "Файл отсутствует на сервере!"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    return Response(
+        {
+            "id": file_obj.id,
+            "original_name": file_obj.original_name,
+            "size": file_obj.size,
+            "token": file_obj.public_token,
+        }
+    )
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
 def public_download_view(request, token):
     try:
         file_obj = StoredFile.objects.get(public_token=token)

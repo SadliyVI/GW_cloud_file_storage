@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-import { registerUser } from "../features/auth/authSlice.js";
+import { clearAuthError, registerUser } from "../features/auth/authSlice.js";
 import PasswordGenerator from "../components/PasswordGenerator.jsx";
+import FieldTooltip from "../components/FieldTooltip.jsx";
+import FormAlert from "../components/FormAlert.jsx";
+import { getCommonError, getFieldError } from "../utils/errors.js";
 
 const usernameRe = /^[A-Za-z][A-Za-z0-9]{3,19}$/;
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -12,7 +15,9 @@ const passwordRe = /^(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{6,}$/;
 export default function RegisterPage() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+
     const authError = useSelector((state) => state.auth.error);
+    const loading = useSelector((state) => state.auth.loading);
 
     const [form, setForm] = useState({
         username: "",
@@ -24,10 +29,19 @@ export default function RegisterPage() {
     const [clientErrors, setClientErrors] = useState({});
 
     function updateField(event) {
+        const { name, value } = event.target;
+
         setForm({
             ...form,
-            [event.target.name]: event.target.value
+            [name]: value
         });
+
+        setClientErrors({
+            ...clientErrors,
+            [name]: ""
+        });
+
+        dispatch(clearAuthError());
     }
 
     function validate() {
@@ -58,7 +72,9 @@ export default function RegisterPage() {
     async function handleSubmit(event) {
         event.preventDefault();
 
-        if (!validate()) return;
+        if (!validate()) {
+            return;
+        }
 
         const result = await dispatch(registerUser(form));
 
@@ -67,66 +83,126 @@ export default function RegisterPage() {
         }
     }
 
+    function handleGeneratedPassword(password) {
+        setForm({
+            ...form,
+            password
+        });
+
+        setClientErrors({
+            ...clientErrors,
+            password: ""
+        });
+
+        dispatch(clearAuthError());
+    }
+
+    const usernameError =
+        clientErrors.username || getFieldError(authError, "username");
+
+    const fullNameError =
+        clientErrors.full_name || getFieldError(authError, "full_name");
+
+    const emailError =
+        clientErrors.email || getFieldError(authError, "email");
+
+    const passwordError =
+        clientErrors.password || getFieldError(authError, "password");
+
+    const commonError = getCommonError(authError);
+
     return (
         <section className="card form-card">
-            <h1>Регистрация</h1>
+            <h1>Регистрация пользователя</h1>
 
-            <form onSubmit={handleSubmit}>
+            <p className="muted">
+                Заполните минимальный набор данных для создания учётной записи.
+            </p>
+
+            <form onSubmit={handleSubmit} noValidate>
                 <label>
                     Логин
-                    <input
-                        name="username"
-                        value={form.username}
-                        onChange={updateField}
-                        title="Только латинские буквы и цифры, первый символ — буква, длина 4–20"
-                        required
-                    />
+
+                    <div className="field-with-tooltip">
+                        <input
+                            name="username"
+                            value={form.username}
+                            onChange={updateField}
+                            className={usernameError ? "input-error" : ""}
+                            title="Только латинские буквы и цифры, первый символ — буква, длина 4–20"
+                            autoComplete="username"
+                        />
+
+                        <FieldTooltip message={usernameError} />
+                    </div>
                 </label>
-                {clientErrors.username && <p className="error">{clientErrors.username}</p>}
 
                 <label>
                     Полное имя
-                    <input
-                        name="full_name"
-                        value={form.full_name}
-                        onChange={updateField}
-                        required
-                    />
+
+                    <div className="field-with-tooltip">
+                        <input
+                            name="full_name"
+                            value={form.full_name}
+                            onChange={updateField}
+                            className={fullNameError ? "input-error" : ""}
+                            title="Введите ваше полное имя"
+                            autoComplete="name"
+                        />
+
+                        <FieldTooltip message={fullNameError} />
+                    </div>
                 </label>
-                {clientErrors.full_name && <p className="error">{clientErrors.full_name}</p>}
 
                 <label>
                     Email
-                    <input
-                        name="email"
-                        type="email"
-                        value={form.email}
-                        onChange={updateField}
-                        required
-                    />
+
+                    <div className="field-with-tooltip">
+                        <input
+                            name="email"
+                            type="email"
+                            value={form.email}
+                            onChange={updateField}
+                            className={emailError ? "input-error" : ""}
+                            title="Введите корректный адрес электронной почты"
+                            autoComplete="email"
+                        />
+
+                        <FieldTooltip message={emailError} />
+                    </div>
                 </label>
-                {clientErrors.email && <p className="error">{clientErrors.email}</p>}
 
                 <label>
                     Пароль
-                    <input
-                        name="password"
-                        type="text"
-                        value={form.password}
-                        onChange={updateField}
-                        title="Минимум 6 символов, одна заглавная буква, одна цифра и один специальный символ"
-                        required
-                    />
+
+                    <div className="field-with-tooltip">
+                        <input
+                            name="password"
+                            type="text"
+                            value={form.password}
+                            onChange={updateField}
+                            className={passwordError ? "input-error" : ""}
+                            title="Минимум 6 символов, одна заглавная буква, одна цифра и один специальный символ"
+                            autoComplete="new-password"
+                        />
+
+                        <FieldTooltip message={passwordError} />
+                    </div>
                 </label>
-                <PasswordGenerator onGenerate={(password) => setForm({ ...form, password })} />
-                {clientErrors.password && <p className="error">{clientErrors.password}</p>}
 
-                {authError && (
-                    <pre className="error-box">{JSON.stringify(authError, null, 2)}</pre>
-                )}
+                <PasswordGenerator onGenerate={handleGeneratedPassword} />
 
-                <button type="submit">Создать аккаунт</button>
+                {commonError && <FormAlert type="error" message={commonError} />}
+
+                <button type="submit" disabled={loading}>
+                    {loading ? "Создание..." : "Создать аккаунт"}
+                </button>
             </form>
+
+            <div className="form-footer">
+                <Link to="/login">Уже есть аккаунт? Войти</Link>
+                <Link to="/login/admin">Вход администратора</Link>
+            </div>
         </section>
     );
 }
