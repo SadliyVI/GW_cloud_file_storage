@@ -4,10 +4,10 @@
 
 Проект реализован как единый монорепозиторий и содержит:
 
-* **backend** на Python/Django;
+* **_backend_** на Python/Django;
 * REST API на Django REST Framework;
 * PostgreSQL в качестве СУБД;
-* **frontend** на React, Redux Toolkit, React Router;
+* **_frontend_** на React, Redux Toolkit, React Router;
 * сборку frontend через npm и Vite;
 * публикацию собранного SPA через единый Django-сервер.
 
@@ -15,29 +15,35 @@
 
 ## Оглавление
 
-* [1. Описание](#1-описание)
-* [2. Установка](#2-установка)
-  * [2.1. Системные требования](#21-системные-требования)
-  * [2.2. Клонирование проекта с GitHub](#22-клонирование-проекта-с-github)
-  * [2.3. Настройка PostgreSQL](#23-настройка-postgresql);
-  * [2.4. Установка backend на Windows](#24-установка-backend-на-windows)
-  * [2.5. Установка backend на Linux/macOS](#25-установка-backend-на-linuxmacos)
-  * [2.6. Установка frontend на Windows/Linux/macOS](#26-установка-frontend-на-windowslinuxmacos)
-  * [2.7. Запуск проекта в режиме разработки](#27-запуск-проекта-в-режиме-разработки)
-  * [2.8. Сборка frontend и запуск через Django](#28-сборка-frontend-и-запуск-через-django)
-* [3. Конфигурация](#3-конфигурация)
-* [4. Структура проекта](#4-структура-проекта)
-* [5. Основные маршруты приложения](#5-основные-маршруты-приложения)
-* [6. Учётная запись администратора](#6-учётная-запись-администратора)
-* [7. Полезные команды](#7-полезные-команды)
-* [8. Возможные проблемы](#8-возможные-проблемы)
-* [9. Лицензия](#9-лицензия)
+- [Graduate Work - "Cloud File Storage"](#graduate-work---cloud-file-storage)
+  - [Оглавление](#оглавление)
+  - [1. Описание](#1-описание)
+  - [1.1. Основные возможности](#11-основные-возможности)
+    - [Для всех пользователей](#для-всех-пользователей)
+    - [Для администратора](#для-администратора)
+  - [1.2. Стек технологий](#12-стек-технологий)
+    - [Backend](#backend)
+    - [Frontend](#frontend)
+  - [1.3. Backend-приложения](#13-backend-приложения)
+    - [`accounts`](#accounts)
+    - [`storage_app`](#storage_app)
+  - [1.4. Frontend](#14-frontend)
+  - [2. Установка](#2-установка)
+  - [2.1. Системные требования](#21-системные-требования)
+  - [2.2. Клонирование проекта с GitHub](#22-клонирование-проекта-с-github)
+    - [Windows PowerShell](#windows-powershell)
+    - [Linux/macOS](#linuxmacos)
+  - [2.3. Настройка PostgreSQL](#23-настройка-postgresql)
+    - [2.3.1. Создание базы данных на Windows](#231-создание-базы-данных-на-windows)
+    - [2.3.2. Создание базы данных на Linux](#232-создание-базы-данных-на-linux)
+    - [2.3.3. Создание базы данных на macOS](#233-создание-базы-данных-на-macos)
+  - [2.4. Установка backend на Windows](#24-установка-backend-на-windows)
 
 ---
 
 ## 1. Описание
 
-**Graduate Work - "Cloud File Storage"** — это веб-приложение облачного файлового хранилища.
+**_Graduate Work - "Cloud File Storage"_** — это веб-приложение облачного файлового хранилища.
 
 Приложение позволяет пользователям регистрироваться, входить в систему, загружать файлы, скачивать их, переименовывать, изменять комментарии, удалять файлы и получать публичные ссылки на скачивание.
 
@@ -161,17 +167,15 @@ Frontend реализован как SPA-приложение.
 
 Проверка версий:
 
-```bash
-git --version
-python --version
-node --version
-npm --version
-psql --version
-```
+`git --version`  
+`python --version`  
+`node --version`  
+`npm --version`  
+`psql --version`
 
 ## 2.2. Клонирование проекта с GitHub
 
-Перейдите в папку, где хотите разместить проект.
+Откройте консоль и перейдите в папку, где хотите разместить проект.
 
 ### Windows PowerShell
 
@@ -180,3 +184,122 @@ cd C:\...\...\YUOR_FILE
 git clone [https://github.com/SadliyVI/GW_cloud_file_storage.git]
 cd GW_cloud_file_storage
 ```
+
+### Linux/macOS
+
+```bash
+cd ~\...\...\YUOR_FILE
+git clone [https://github.com/SadliyVI/GW_cloud_file_storage.git]
+cd GW_cloud_file_storage
+```
+
+## 2.3. Настройка PostgreSQL
+
+Проект использует СУБД **_PostgreSQL_**.  
+По умолчанию в инструкции используется база данных:  **_gw_cloud_storage_**.  
+Пользователь: **_postgres_**  
+Пароль: **_geonav_**  
+Если у вас другие данные PostgreSQL, укажите их в файле **_backend/.env_**.
+
+### 2.3.1. Создание базы данных на Windows
+
+Откройте PowerShell или терминал PostgreSQL и подключитесь к PostgreSQL: _`psql -U postgres`_  
+Создайте базу данных: _`CREATE DATABASE gw_cloud_storage`_  
+Выйдите из psql: _`\q`_
+
+### 2.3.2. Создание базы данных на Linux
+
+Откройте терминал и подключитесь к PostgreSQL: _`sudo -u postgres psql`_  
+Создайте базу данных: _`CREATE DATABASE gw_cloud_storage`_  
+Выйдите из psql: _`\q`_
+
+### 2.3.3. Создание базы данных на macOS
+
+Если PostgreSQL установлен через Homebrew:  
+Откройте терминал и подключитесь к PostgreSQL: _`brew services start postgresqlpsql postgres`  
+Создайте базу данных: _`CREATE DATABASE gw_cloud_storage`_  
+Выйдите из psql: _`\q`_
+
+## 2.4. Установка backend на Windows
+
+Откройте терминал и перейдите в папку **backend**: _`cd backend`_  
+Создайте виртуальное окружение: _`python -m venv venv`_  
+Активируйте виртуальное окружение: _`.\venv\Scripts\activate`_  
+Обновите pip: _`python -m pip install --upgrade pip`_  
+Установите зависимости: _`pip install -r requirements.txt`_  
+Создайте файл .env в корне папки **backend**: _`copy .env.example .env`_  
+Если файла .env.example нет, создайте файл вручную: _`New-Item .env`_  
+Пример содержимого файла _`backend/.env`_:
+
+```bash
+DJANGO_SETTINGS_MODULE=cloud_storage.settings.dev
+SECRET_KEY=local-dev-secret
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
+DB_NAME=gw_cloud_storage
+DB_USER=postgres
+DB_PASSWORD=postgres
+## DB_HOST=127.0.0.1
+## DB_PORT=5432
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+FILE_STORAGE_ROOT=media/user_files
+FRONTEND_URL=http://127.0.0.1:5173
+DEFAULT_ADMIN_USERNAME=admin
+DEFAULT_ADMIN_FULL_NAME=System Administrator
+DEFAULT_ADMIN_EMAIL=admin@example.com
+DEFAULT_ADMIN_PASSWORD=Admin123!
+```
+Выполните миграции:
+
+
+python manage.py migrate
+
+Запустите backend:
+
+
+python manage.py runserver
+
+Backend будет доступен по адресу:
+
+
+http://127.0.0.1:8000
+
+
+2.5. Установка backend на Linux/macOS
+
+Перейдите в папку backend:
+
+
+cd backend
+
+Создайте виртуальное окружение:
+
+
+python3 -m venv venv
+
+Активируйте виртуальное окружение:
+
+
+source venv/bin/activate
+
+Обновите pip:
+
+
+python -m pip install --upgrade pip
+
+Установите зависимости:
+
+
+pip install -r requirements.txt
+
+Создайте .env:
+
+
+cp .env.example .env
+
+Если файла .env.example нет, создайте .env вручную:
+
+
+touch .env
+
+Пример содержимого файла backend/.env:
