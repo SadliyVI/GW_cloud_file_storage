@@ -7,7 +7,7 @@ export default function HomePage() {
     return (
         <section className="home">
             <div className="card home-hero">
-                <h1>GW Cloud File Storage</h1>
+                <h1>Cloud File Storage</h1>
 
                 <p>
                     Облачное файловое хранилище для загрузки, хранения, скачивания,

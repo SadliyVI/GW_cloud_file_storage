@@ -14,7 +14,7 @@ export default function Navbar() {
 
     return (
         <header className="navbar">
-            <div className="navbar__brand">GW Cloud</div>
+            <div className="navbar__brand">Cloud File Storage</div>
 
             <nav className="navbar__links">
                 <NavLink to="/">Главная</NavLink>

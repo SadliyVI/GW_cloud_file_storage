@@ -1,4 +1,4 @@
-const API_BASE = "/api";
+const API_BASE_URL = "/api";
 
 function getCookie(name) {
     const cookies = document.cookie ? document.cookie.split(";") : [];
@@ -7,26 +7,58 @@ function getCookie(name) {
         const trimmed = cookie.trim();
 
         if (trimmed.startsWith(`${name}=`)) {
-            return decodeURIComponent(trimmed.substring(name.length + 1));
+            return decodeURIComponent(trimmed.slice(name.length + 1));
         }
     }
 
     return null;
 }
 
-function isUnsafeMethod(method) {
-    return ["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase());
+async function parseResponse(response) {
+    const contentType = response.headers.get("content-type") || "";
+
+    if (response.status === 204) {
+        return null;
+    }
+
+    if (contentType.includes("application/json")) {
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw data;
+        }
+
+        return data;
+    }
+
+    const text = await response.text();
+
+    if (!response.ok) {
+        throw { detail: text || "Ошибка запроса." };
+    }
+
+    return text;
 }
 
-async function request(path, options = {}) {
-    const method = options.method || "GET";
-
+async function request(method, url, data = null, options = {}) {
     const headers = {
-        ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
         ...(options.headers || {})
     };
 
-    if (isUnsafeMethod(method)) {
+    const config = {
+        method,
+        headers,
+        credentials: "include"
+    };
+
+    if (data instanceof FormData) {
+        config.body = data;
+    } else if (data !== null) {
+        headers["Content-Type"] = "application/json";
+        config.body = JSON.stringify(data);
+    }
+
+    if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
         const csrfToken = getCookie("csrftoken");
 
         if (csrfToken) {
@@ -34,58 +66,99 @@ async function request(path, options = {}) {
         }
     }
 
-    const config = {
-        credentials: "include",
-        headers,
-        ...options
-    };
+    const response = await fetch(`${API_BASE_URL}${url}`, config);
+    return parseResponse(response);
+}
 
-    const response = await fetch(`${API_BASE}${path}`, config);
+function xhrRequest(method, url, data = null, options = {}) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
 
-    if (response.status === 204) {
-        return null;
-    }
+        xhr.open(method, `${API_BASE_URL}${url}`, true);
+        xhr.withCredentials = true;
+        xhr.responseType = options.responseType || "json";
 
-    const contentType = response.headers.get("content-type") || "";
+        const csrfToken = getCookie("csrftoken");
 
-    if (!response.ok) {
-        let errorPayload = {
-            detail: `Ошибка запроса. HTTP ${response.status}`
-        };
-
-        if (contentType.includes("application/json")) {
-            errorPayload = await response.json();
+        if (!["GET", "HEAD", "OPTIONS"].includes(method) && csrfToken) {
+            xhr.setRequestHeader("X-CSRFToken", csrfToken);
         }
 
-        throw errorPayload;
-    }
+        if (!(data instanceof FormData) && data !== null) {
+            xhr.setRequestHeader("Content-Type", "application/json");
+        }
 
-    if (contentType.includes("application/json")) {
-        return response.json();
-    }
+        if (options.headers) {
+            Object.entries(options.headers).forEach(([key, value]) => {
+                xhr.setRequestHeader(key, value);
+            });
+        }
 
-    return response;
+        if (xhr.upload && typeof options.onUploadProgress === "function") {
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    options.onUploadProgress(
+                        Math.round((event.loaded / event.total) * 100)
+                    );
+                }
+            };
+        }
+
+        if (typeof options.onDownloadProgress === "function") {
+            xhr.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    options.onDownloadProgress(
+                        Math.round((event.loaded / event.total) * 100)
+                    );
+                }
+            };
+        }
+
+        xhr.onload = () => {
+            const contentType = xhr.getResponseHeader("content-type") || "";
+
+            if (xhr.status >= 200 && xhr.status < 300) {
+                if (options.responseType === "blob") {
+                    resolve(xhr);
+                    return;
+                }
+
+                resolve(xhr.response);
+                return;
+            }
+
+            if (contentType.includes("application/json")) {
+                reject(xhr.response || { detail: "Ошибка запроса." });
+            } else {
+                reject({ detail: xhr.responseText || "Ошибка запроса." });
+            }
+        };
+
+        xhr.onerror = () => {
+            reject({ detail: "Ошибка сети." });
+        };
+
+        const body =
+            data instanceof FormData || data === null ? data : JSON.stringify(data);
+
+        xhr.send(body);
+    });
 }
 
 export const api = {
-    csrf: () => request("/csrf/"),
+    get: (url) => request("GET", url),
+    post: (url, data) => request("POST", url, data),
+    patch: (url, data) => request("PATCH", url, data),
+    delete: (url) => request("DELETE", url),
 
-    get: (path) => request(path),
-
-    post: (path, body) =>
-        request(path, {
-            method: "POST",
-            body: body instanceof FormData ? body : JSON.stringify(body)
+    upload: (url, formData, onUploadProgress) =>
+        xhrRequest("POST", url, formData, {
+            onUploadProgress
         }),
 
-    patch: (path, body) =>
-        request(path, {
-            method: "PATCH",
-            body: JSON.stringify(body)
-        }),
-
-    delete: (path) =>
-        request(path, {
-            method: "DELETE"
+    download: (url, onDownloadProgress) =>
+        xhrRequest("GET", url, null, {
+            responseType: "blob",
+            onDownloadProgress
         })
 };

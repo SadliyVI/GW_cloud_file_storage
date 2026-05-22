@@ -1,4 +1,5 @@
 import uuid
+
 from django.conf import settings
 from django.db import models
 
@@ -19,7 +20,9 @@ class StoredFile(models.Model):
     last_downloaded_at = models.DateTimeField(null=True, blank=True)
     comment = models.TextField(blank=True)
     storage_path = models.CharField(max_length=500)
-    public_token = models.CharField(max_length=64, unique=True, default=generate_public_token)
+    public_token = models.CharField(
+        max_length=64, unique=True, default=generate_public_token
+    )
 
     class Meta:
         ordering = ["-uploaded_at"]

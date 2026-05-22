@@ -9,7 +9,10 @@ import {
     uploadFile
 } from "../features/files/filesSlice.js";
 
+import { api } from "../api/client.js";
+import ConfirmModal from "../components/ConfirmModal.jsx";
 import FormAlert from "../components/FormAlert.jsx";
+import ProgressBar from "../components/ProgressBar.jsx";
 import { getAnyError } from "../utils/errors.js";
 
 function formatBytes(bytes) {
@@ -37,6 +40,39 @@ function formatDate(value) {
     return new Date(value).toLocaleString("ru-RU");
 }
 
+function getFileNameFromDisposition(disposition, fallback) {
+    if (!disposition) {
+        return fallback;
+    }
+
+    const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+
+    if (utf8Match) {
+        return decodeURIComponent(utf8Match[1]);
+    }
+
+    const match = disposition.match(/filename="?([^"]+)"?/i);
+
+    if (match) {
+        return match[1];
+    }
+
+    return fallback;
+}
+
+function saveBlob(blob, filename) {
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(blobUrl);
+}
+
 export default function StoragePage() {
     const { userId } = useParams();
     const dispatch = useDispatch();
@@ -48,6 +84,12 @@ export default function StoragePage() {
     const [comment, setComment] = useState("");
     const [localError, setLocalError] = useState("");
     const [openMenuId, setOpenMenuId] = useState(null);
+
+    const [fileToDelete, setFileToDelete] = useState(null);
+
+    const [uploadProgress, setUploadProgress] = useState(null);
+    const [downloadProgress, setDownloadProgress] = useState(null);
+    const [downloadingFileName, setDownloadingFileName] = useState("");
 
     useEffect(() => {
         dispatch(fetchFiles(userId));
@@ -76,28 +118,76 @@ export default function StoragePage() {
             return;
         }
 
+        setUploadProgress(0);
+
         const result = await dispatch(
             uploadFile({
                 file: selectedFile,
                 comment,
-                userId
+                userId,
+                onProgress: setUploadProgress
             })
         );
 
         if (uploadFile.fulfilled.match(result)) {
+            setUploadProgress(100);
+
+            setTimeout(() => {
+                setUploadProgress(null);
+            }, 700);
+
             setSelectedFile(null);
             setComment("");
             event.target.reset();
+        } else {
+            setUploadProgress(null);
         }
     }
 
-    function handleDelete(fileId) {
+    async function handleDownload(file) {
         setOpenMenuId(null);
+        setLocalError("");
+        setDownloadingFileName(file.original_name);
+        setDownloadProgress(0);
 
-        const confirmed = window.confirm("Удалить файл из хранилища?");
+        try {
+            const xhr = await api.download(
+                `/storage/files/${file.id}/download/`,
+                setDownloadProgress
+            );
 
-        if (confirmed) {
-            dispatch(deleteFile(fileId));
+            const filename = getFileNameFromDisposition(
+                xhr.getResponseHeader("content-disposition"),
+                file.original_name
+            );
+
+            saveBlob(xhr.response, filename);
+            setDownloadProgress(100);
+
+            setTimeout(() => {
+                setDownloadProgress(null);
+                setDownloadingFileName("");
+            }, 700);
+        } catch (error) {
+            setDownloadProgress(null);
+            setDownloadingFileName("");
+            setLocalError(getAnyError(error) || "Не удалось скачать файл.");
+        }
+    }
+
+    function openDeleteFileModal(file) {
+        setOpenMenuId(null);
+        setFileToDelete(file);
+    }
+
+    function closeDeleteFileModal() {
+        setFileToDelete(null);
+    }
+
+    function confirmDeleteFile() {
+        if (fileToDelete) {
+            dispatch(deleteFile(fileToDelete.id));
+            setFileToDelete(null);
         }
     }
 
@@ -158,172 +248,233 @@ export default function StoragePage() {
     const isAnotherUserStorage = userId && currentUser?.is_staff;
 
     return (
-        <section className="card wide">
-            <div className="page-header">
-                <div>
-                    <h1>
-                        Файловое хранилище
-                        {isAnotherUserStorage ? ` пользователя #${userId}` : ""}
-                    </h1>
+        <>
+            <section className="card wide">
+                <div className="page-header">
+                    <div>
+                        <h1>
+                            Файловое хранилище
+                            {isAnotherUserStorage ? ` пользователя #${userId}` : ""}
+                        </h1>
 
-                    <p className="muted">
-                        Здесь можно загружать, скачивать, переименовывать, удалять файлы и
-                        копировать специальные публичные ссылки.
-                    </p>
+                        <p className="muted">
+                            Здесь можно загружать, скачивать, переименовывать, удалять файлы и
+                            копировать специальные публичные ссылки.
+                        </p>
+                    </div>
+
+                    {currentUser?.is_staff && (
+                        <Link className="button secondary" to="/admin">
+                            Назад к пользователям
+                        </Link>
+                    )}
                 </div>
 
-                {currentUser?.is_staff && (
-                    <Link className="button secondary" to="/admin">
-                        Назад к пользователям
-                    </Link>
+                <form className="upload-form" onSubmit={handleUpload}>
+                    <label>
+                        Файл
+
+                        <div className="file-input-wrapper">
+                            <input
+                                id="storage-file-input"
+                                className="file-input-hidden"
+                                type="file"
+                                onChange={(event) => {
+                                    setSelectedFile(event.target.files[0] || null);
+                                    setLocalError("");
+                                }}
+                                title="Выберите файл для загрузки в хранилище"
+                            />
+
+                            <label
+                                className={`file-input-label ${selectedFile ? "has-file" : ""}`}
+                                htmlFor="storage-file-input"
+                            >
+                                <span className="file-input-button">
+                                    {selectedFile ? "Файл выбран" : "Выберите файл"}
+                                </span>
+
+                                <span className="file-input-name">
+                                    {selectedFile ? selectedFile.name : "Файл не выбран"}
+                                </span>
+                            </label>
+                        </div>
+                    </label>
+
+                    <label>
+                        Комментарий
+
+                        <input
+                            value={comment}
+                            onChange={(event) => setComment(event.target.value)}
+                            placeholder="Необязательный комментарий"
+                            title="Комментарий будет отображаться в списке файлов"
+                        />
+                    </label>
+
+                    <button type="submit" disabled={uploadProgress !== null}>
+                        {uploadProgress !== null ? "Загрузка..." : "Загрузить"}
+                    </button>
+                </form>
+
+                {uploadProgress !== null && (
+                    <ProgressBar
+                        value={uploadProgress}
+                        label={
+                            selectedFile
+                                ? `Загрузка файла "${selectedFile.name}"`
+                                : "Загрузка файла"
+                        }
+                    />
                 )}
-            </div>
 
-            <form className="upload-form" onSubmit={handleUpload}>
-                <label>
-                    Файл
-
-                    <input
-                        type="file"
-                        onChange={(event) => {
-                            setSelectedFile(event.target.files[0]);
-                            setLocalError("");
-                        }}
-                        title="Выберите файл для загрузки в хранилище"
+                {downloadProgress !== null && (
+                    <ProgressBar
+                        value={downloadProgress}
+                        label={
+                            downloadingFileName
+                                ? `Скачивание файла "${downloadingFileName}"`
+                                : "Скачивание файла"
+                        }
                     />
-                </label>
+                )}
 
-                <label>
-                    Комментарий
+                {localError && <FormAlert type="error" message={localError} />}
 
-                    <input
-                        value={comment}
-                        onChange={(event) => setComment(event.target.value)}
-                        placeholder="Необязательный комментарий"
-                        title="Комментарий будет отображаться в списке файлов"
+                {loading && <p className="muted">Загрузка списка файлов...</p>}
+
+                {error && (
+                    <FormAlert
+                        type="error"
+                        message={getAnyError(error) || "Не удалось загрузить список файлов."}
                     />
-                </label>
+                )}
 
-                <button type="submit">Загрузить</button>
-            </form>
-
-            {localError && <FormAlert type="error" message={localError} />}
-
-            {loading && <p className="muted">Загрузка списка файлов...</p>}
-
-            {error && (
-                <FormAlert
-                    type="error"
-                    message={getAnyError(error) || "Не удалось загрузить список файлов."}
-                />
-            )}
-
-            <div className="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th title="Оригинальное имя файла">Наименование файла</th>
-                            <th title="Комментарий пользователя">Комментарий</th>
-                            <th title="Размер файла">Размер</th>
-                            <th title="Дата загрузки файла">Дата загрузки</th>
-                            <th title="Дата последнего скачивания">
-                                Последнее скачивание
-                            </th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {items.map((file) => (
-                            <tr key={file.id}>
-                                <td>
-                                    <div className="file-name-cell">
-                                        <span className="file-name-text">{file.original_name}</span>
-
-                                        <div className="file-actions-menu-wrap">
-                                            <button
-                                                type="button"
-                                                className="icon-menu-button"
-                                                onClick={(event) => toggleMenu(event, file.id)}
-                                                title="Открыть меню действий"
-                                                aria-label="Открыть меню действий"
-                                            >
-                                                ⋮
-                                            </button>
-
-                                            {openMenuId === file.id && (
-                                                <div className="file-actions-dropdown">
-                                                    <a
-                                                        className="file-action-item"
-                                                        href={`/api/storage/files/${file.id}/download/`}
-                                                        title="Скачать файл на локальный диск"
-                                                    >
-                                                        <span className="file-action-icon">⬇</span>
-                                                        <span>Скачать</span>
-                                                    </a>
-
-                                                    <button
-                                                        type="button"
-                                                        className="file-action-item"
-                                                        onClick={() => handleRename(file)}
-                                                        title="Изменить отображаемое имя файла"
-                                                    >
-                                                        <span className="file-action-icon">✎</span>
-                                                        <span>Переименовать</span>
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        className="file-action-item"
-                                                        onClick={() => handleComment(file)}
-                                                        title="Изменить комментарий к файлу"
-                                                    >
-                                                        <span className="file-action-icon">💬</span>
-                                                        <span>Комментарий</span>
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        className="file-action-item"
-                                                        onClick={() => copyPublicLink(file)}
-                                                        title="Скопировать специальную обезличенную ссылку"
-                                                    >
-                                                        <span className="file-action-icon">🔗</span>
-                                                        <span>Копировать ссылку</span>
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        className="file-action-item danger"
-                                                        onClick={() => handleDelete(file.id)}
-                                                        title="Удалить файл из хранилища"
-                                                    >
-                                                        <span className="file-action-icon">🗑</span>
-                                                        <span>Удалить</span>
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <td>{file.comment || "—"}</td>
-
-                                <td>{formatBytes(file.size)}</td>
-
-                                <td>{formatDate(file.uploaded_at)}</td>
-
-                                <td>{formatDate(file.last_downloaded_at)}</td>
-                            </tr>
-                        ))}
-
-                        {!items.length && !loading && (
+                <div className="table-wrapper">
+                    <table>
+                        <thead>
                             <tr>
-                                <td colSpan="5">Файлы отсутствуют.</td>
+                                <th title="Оригинальное имя файла">Наименование файла</th>
+                                <th title="Комментарий пользователя">Комментарий</th>
+                                <th title="Размер файла">Размер</th>
+                                <th title="Дата загрузки файла">Дата загрузки</th>
+                                <th title="Дата последнего скачивания">
+                                    Последнее скачивание
+                                </th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
-        </section>
+                        </thead>
+
+                        <tbody>
+                            {items.map((file) => (
+                                <tr key={file.id}>
+                                    <td>
+                                        <div className="file-name-cell">
+                                            <span className="file-name-text">
+                                                {file.original_name}
+                                            </span>
+
+                                            <div className="file-actions-menu-wrap">
+                                                <button
+                                                    type="button"
+                                                    className="icon-menu-button"
+                                                    onClick={(event) => toggleMenu(event, file.id)}
+                                                    title="Открыть меню действий"
+                                                    aria-label="Открыть меню действий"
+                                                >
+                                                    ⋮
+                                                </button>
+
+                                                {openMenuId === file.id && (
+                                                    <div className="file-actions-dropdown">
+                                                        <button
+                                                            type="button"
+                                                            className="file-action-item"
+                                                            onClick={() => handleDownload(file)}
+                                                            title="Скачать файл на локальный диск"
+                                                        >
+                                                            <span className="file-action-icon">⬇</span>
+                                                            <span>Скачать</span>
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            className="file-action-item"
+                                                            onClick={() => handleRename(file)}
+                                                            title="Изменить отображаемое имя файла"
+                                                        >
+                                                            <span className="file-action-icon">✎</span>
+                                                            <span>Переименовать</span>
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            className="file-action-item"
+                                                            onClick={() => handleComment(file)}
+                                                            title="Изменить комментарий к файлу"
+                                                        >
+                                                            <span className="file-action-icon">💬</span>
+                                                            <span>Комментарий</span>
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            className="file-action-item"
+                                                            onClick={() => copyPublicLink(file)}
+                                                            title="Скопировать специальную обезличенную ссылку"
+                                                        >
+                                                            <span className="file-action-icon">🔗</span>
+                                                            <span>Копировать ссылку</span>
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            className="file-action-item danger"
+                                                            onClick={() => openDeleteFileModal(file)}
+                                                            title="Удалить файл из хранилища"
+                                                        >
+                                                            <span className="file-action-icon">🗑</span>
+                                                            <span>Удалить</span>
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td>{file.comment || "—"}</td>
+
+                                    <td>{formatBytes(file.size)}</td>
+
+                                    <td>{formatDate(file.uploaded_at)}</td>
+
+                                    <td>{formatDate(file.last_downloaded_at)}</td>
+                                </tr>
+                            ))}
+
+                            {!items.length && !loading && (
+                                <tr>
+                                    <td colSpan="5">Файлы отсутствуют.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <ConfirmModal
+                open={Boolean(fileToDelete)}
+                danger
+                title="Подтверждение удаления файла"
+                message={
+                    fileToDelete
+                        ? `Вы действительно хотите удалить файл "${fileToDelete.original_name}"?`
+                        : ""
+                }
+                confirmText="Удалить"
+                cancelText="Отмена"
+                onConfirm={confirmDeleteFile}
+                onCancel={closeDeleteFileModal}
+            />
+        </>
     );
 }

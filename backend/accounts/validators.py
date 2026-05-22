@@ -1,4 +1,5 @@
 import re
+
 from django.core.exceptions import ValidationError
 
 USERNAME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9]{3,19}$")

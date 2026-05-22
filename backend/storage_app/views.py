@@ -5,14 +5,14 @@ from django.contrib.auth import get_user_model
 from django.http import FileResponse
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, parser_classes
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.decorators import api_view, parser_classes, permission_classes
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from .models import StoredFile
 from .serializers import StoredFileSerializer
-from .utils import make_unique_file_path, delete_file_safely
+from .utils import delete_file_safely, make_unique_file_path
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -37,10 +37,14 @@ def can_access(request, file_obj):
 def files_list_view(request):
     target_user = get_target_user(request)
     if not target_user:
-        return Response({"detail": "Пользователь не найден!"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Пользователь не найден!"}, status=status.HTTP_404_NOT_FOUND
+        )
 
     if target_user.id != request.user.id and not request.user.is_staff:
-        return Response({"detail": "Доступ запрещён!"}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "Доступ запрещён!"}, status=status.HTTP_403_FORBIDDEN
+        )
 
     files = StoredFile.objects.filter(owner=target_user)
     serializer = StoredFileSerializer(files, many=True, context={"request": request})
@@ -54,16 +58,22 @@ def upload_file_view(request):
     target_user = get_target_user(request)
 
     if not target_user:
-        return Response({"detail": "Пользователь не найден!"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Пользователь не найден!"}, status=status.HTTP_404_NOT_FOUND
+        )
 
     if target_user.id != request.user.id and not request.user.is_staff:
-        return Response({"detail": "Доступ запрещён!"}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "Доступ запрещён!"}, status=status.HTTP_403_FORBIDDEN
+        )
 
     uploaded_file = request.FILES.get("file")
     comment = request.data.get("comment", "")
 
     if not uploaded_file:
-        return Response({"detail": "Файл не передан!"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"detail": "Файл не передан!"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
     path = make_unique_file_path(target_user, uploaded_file.name)
 
@@ -100,7 +110,9 @@ def delete_file_view(request, file_id):
         return Response({"detail": "Файл не найден!"}, status=status.HTTP_404_NOT_FOUND)
 
     if not can_access(request, file_obj):
-        return Response({"detail": "Доступ запрещён!"}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "Доступ запрещён!"}, status=status.HTTP_403_FORBIDDEN
+        )
 
     delete_file_safely(file_obj.storage_path)
     file_obj.delete()
@@ -118,7 +130,9 @@ def update_file_view(request, file_id):
         return Response({"detail": "Файл не найден!"}, status=status.HTTP_404_NOT_FOUND)
 
     if not can_access(request, file_obj):
-        return Response({"detail": "Доступ запрещён!"}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "Доступ запрещён!"}, status=status.HTTP_403_FORBIDDEN
+        )
 
     original_name = request.data.get("original_name")
     comment = request.data.get("comment")
@@ -126,7 +140,10 @@ def update_file_view(request, file_id):
     if original_name is not None:
         original_name = original_name.strip()
         if not original_name:
-            return Response({"detail": "Имя файла не может быть пустым!"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Имя файла не может быть пустым!"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         file_obj.original_name = original_name
 
     if comment is not None:
@@ -148,15 +165,21 @@ def download_file_view(request, file_id):
         return Response({"detail": "Файл не найден!"}, status=status.HTTP_404_NOT_FOUND)
 
     if not can_access(request, file_obj):
-        return Response({"detail": "Доступ запрещён!"}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "Доступ запрещён!"}, status=status.HTTP_403_FORBIDDEN
+        )
 
     if not os.path.exists(file_obj.storage_path):
-        return Response({"detail": "Файл отсутствует на сервере!"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Файл отсутствует на сервере!"}, status=status.HTTP_404_NOT_FOUND
+        )
 
     file_obj.last_downloaded_at = timezone.now()
     file_obj.save(update_fields=["last_downloaded_at"])
 
-    logger.info("Downloaded private file id=%s by=%s", file_obj.id, request.user.username)
+    logger.info(
+        "Downloaded private file id=%s by=%s", file_obj.id, request.user.username
+    )
 
     return FileResponse(
         open(file_obj.storage_path, "rb"),
@@ -191,6 +214,7 @@ def public_file_info_view(request, token):
         }
     )
 
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def public_download_view(request, token):
@@ -200,7 +224,9 @@ def public_download_view(request, token):
         return Response({"detail": "Файл не найден!"}, status=status.HTTP_404_NOT_FOUND)
 
     if not os.path.exists(file_obj.storage_path):
-        return Response({"detail": "Файл отсутствует на сервере!"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Файл отсутствует на сервере!"}, status=status.HTTP_404_NOT_FOUND
+        )
 
     file_obj.last_downloaded_at = timezone.now()
     file_obj.save(update_fields=["last_downloaded_at"])

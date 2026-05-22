@@ -8,10 +8,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from storage_app.models import StoredFile
-
 from .models import User
-from .serializers import RegisterSerializer, LoginSerializer, UserPublicSerializer
+from .serializers import LoginSerializer, RegisterSerializer, UserPublicSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -61,8 +59,12 @@ def current_user_view(request):
 @permission_classes([IsAuthenticated])
 def users_list_view(request):
     if not request.user.is_staff:
-        logger.warning("Forbidden users list requested by username=%s", request.user.username)
-        return Response({"detail": "Доступ запрещён!"}, status=status.HTTP_403_FORBIDDEN)
+        logger.warning(
+            "Forbidden users list requested by username=%s", request.user.username
+        )
+        return Response(
+            {"detail": "Доступ запрещён!"}, status=status.HTTP_403_FORBIDDEN
+        )
 
     users = User.objects.annotate(
         files_count=Count("files"),
@@ -76,19 +78,28 @@ def users_list_view(request):
 @permission_classes([IsAuthenticated])
 def user_admin_flag_view(request, user_id):
     if not request.user.is_staff:
-        return Response({"detail": "Доступ запрещён!"}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "Доступ запрещён!"}, status=status.HTTP_403_FORBIDDEN
+        )
 
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
-        return Response({"detail": "Пользователь не найден!"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Пользователь не найден!"}, status=status.HTTP_404_NOT_FOUND
+        )
 
     is_staff = bool(request.data.get("is_staff"))
     user.is_staff = is_staff
     user.is_superuser = is_staff
     user.save(update_fields=["is_staff", "is_superuser"])
 
-    logger.info("Changed admin flag user=%s is_staff=%s by=%s", user.username, is_staff, request.user.username)
+    logger.info(
+        "Changed admin flag user=%s is_staff=%s by=%s",
+        user.username,
+        is_staff,
+        request.user.username,
+    )
     return Response(UserPublicSerializer(user).data)
 
 
@@ -96,15 +107,22 @@ def user_admin_flag_view(request, user_id):
 @permission_classes([IsAuthenticated])
 def user_delete_view(request, user_id):
     if not request.user.is_staff:
-        return Response({"detail": "Доступ запрещён!"}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "Доступ запрещён!"}, status=status.HTTP_403_FORBIDDEN
+        )
 
     if request.user.id == user_id:
-        return Response({"detail": "Нельзя удалить текущего пользователя!"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"detail": "Нельзя удалить текущего пользователя!"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
-        return Response({"detail": "Пользователь не найден!"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Пользователь не найден!"}, status=status.HTTP_404_NOT_FOUND
+        )
 
     username = user.username
     user.delete()

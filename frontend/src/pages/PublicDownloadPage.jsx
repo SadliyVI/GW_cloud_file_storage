@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import FormAlert from "../components/FormAlert.jsx";
 import { api } from "../api/client.js";
+import FormAlert from "../components/FormAlert.jsx";
+import ProgressBar from "../components/ProgressBar.jsx";
 import { getAnyError } from "../utils/errors.js";
 
 function formatBytes(bytes) {
@@ -22,12 +23,47 @@ function formatBytes(bytes) {
     return `${size.toFixed(1)} ${units[index]}`;
 }
 
+function getFileNameFromDisposition(disposition, fallback) {
+    if (!disposition) {
+        return fallback;
+    }
+
+    const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+
+    if (utf8Match) {
+        return decodeURIComponent(utf8Match[1]);
+    }
+
+    const match = disposition.match(/filename="?([^"]+)"?/i);
+
+    if (match) {
+        return match[1];
+    }
+
+    return fallback;
+}
+
+function saveBlob(blob, filename) {
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(blobUrl);
+}
+
 export default function PublicDownloadPage() {
     const { token } = useParams();
 
     const [fileInfo, setFileInfo] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+
+    const [downloadProgress, setDownloadProgress] = useState(null);
 
     useEffect(() => {
         async function loadFileInfo() {
@@ -47,14 +83,41 @@ export default function PublicDownloadPage() {
         loadFileInfo();
     }, [token]);
 
-    function handleDownload() {
-        window.location.href = `/api/storage/public/${token}/download/`;
+    async function handleDownload() {
+        setError("");
+        setDownloadProgress(0);
+
+        try {
+            const xhr = await api.download(
+                `/storage/public/${token}/download/`,
+                setDownloadProgress
+            );
+
+            const filename = getFileNameFromDisposition(
+                xhr.getResponseHeader("content-disposition"),
+                fileInfo?.original_name || "download"
+            );
+
+            saveBlob(xhr.response, filename);
+            setDownloadProgress(100);
+
+            setTimeout(() => {
+                window.close();
+
+                if (!window.closed) {
+                    window.location.href = "/";
+                }
+            }, 900);
+        } catch (err) {
+            setDownloadProgress(null);
+            setError(getAnyError(err) || "Не удалось скачать файл.");
+        }
     }
 
     return (
         <section className="download-confirm-wrapper">
             <div className="download-confirm-card">
-                <h1>Подтвердите скачивание файла!</h1>
+                <h1>Потдтвердите скачивание файла!</h1>
 
                 {loading && <p>Получение информации о файле...</p>}
 
@@ -74,9 +137,20 @@ export default function PublicDownloadPage() {
                             </p>
                         </div>
 
+                        {downloadProgress !== null && (
+                            <ProgressBar
+                                value={downloadProgress}
+                                label={`Скачивание файла "${fileInfo.original_name}"`}
+                            />
+                        )}
+
                         <div className="download-confirm-actions">
-                            <button type="button" onClick={handleDownload}>
-                                Скачать
+                            <button
+                                type="button"
+                                onClick={handleDownload}
+                                disabled={downloadProgress !== null}
+                            >
+                                {downloadProgress !== null ? "Скачивание..." : "Скачать"}
                             </button>
 
                             <Link className="button secondary" to="/">

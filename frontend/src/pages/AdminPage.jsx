@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -8,6 +8,7 @@ import {
     updateUserAdminFlag
 } from "../features/users/usersSlice.js";
 
+import ConfirmModal from "../components/ConfirmModal.jsx";
 import FormAlert from "../components/FormAlert.jsx";
 import { getAnyError } from "../utils/errors.js";
 
@@ -34,21 +35,28 @@ export default function AdminPage() {
     const { items, loading, error } = useSelector((state) => state.users);
     const currentUser = useSelector((state) => state.auth.user);
 
+    const [userToDelete, setUserToDelete] = useState(null);
+
     useEffect(() => {
         dispatch(fetchUsers());
     }, [dispatch]);
 
-    function handleDelete(userId, username) {
-        const confirmed = window.confirm(
-            `Удалить пользователя "${username}" и все его файлы?`
-        );
+    function openDeleteUserModal(user) {
+        setUserToDelete(user);
+    }
 
-        if (confirmed) {
-            dispatch(deleteUser(userId));
+    function closeDeleteUserModal() {
+        setUserToDelete(null);
+    }
+
+    function confirmDeleteUser() {
+        if (userToDelete) {
+            dispatch(deleteUser(userToDelete.id));
+            setUserToDelete(null);
         }
     }
 
-    function toggleAdmin(user) {
+    function handleAdminChange(user) {
         dispatch(
             updateUserAdminFlag({
                 userId: user.id,
@@ -58,132 +66,121 @@ export default function AdminPage() {
     }
 
     return (
-        <section className="card wide">
-            <div className="page-header">
-                <div>
-                    <h1>Административный интерфейс</h1>
-
-                    <p className="muted">
-                        Раздел доступен только пользователям с признаком администратора.
-                        Здесь можно управлять пользователями и их файловыми хранилищами.
-                    </p>
+        <>
+            <section className="card wide">
+                <div className="page-header">
+                    <div>
+                        <h1>Административная панель</h1>
+                        <p className="muted">
+                            Управление пользователями и доступ к их файловым хранилищам.
+                        </p>
+                    </div>
                 </div>
 
-                <Link className="button secondary" to="/storage">
-                    Моё хранилище
-                </Link>
-            </div>
+                {loading && <p className="muted">Загрузка пользователей...</p>}
 
-            {loading && <p>Загрузка списка пользователей...</p>}
+                {error && (
+                    <FormAlert
+                        type="error"
+                        message={getAnyError(error) || "Не удалось загрузить пользователей."}
+                    />
+                )}
 
-            {error && (
-                <FormAlert
-                    type="error"
-                    message={getAnyError(error) || "Не удалось загрузить пользователей."}
-                />
-            )}
-
-            <div className="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th title="Внутренний идентификатор пользователя">ID</th>
-                            <th title="Логин пользователя">Логин</th>
-                            <th title="Полное имя, указанное при регистрации">
-                                Полное имя
-                            </th>
-                            <th title="Email, указанный при регистрации">Email</th>
-                            <th title="Признак администратора">Администратор</th>
-                            <th title="Количество файлов в хранилище пользователя">
-                                Файлов
-                            </th>
-                            <th title="Общий размер файлов пользователя">
-                                Размер хранилища
-                            </th>
-                            <th title="Путь к папке хранилища пользователя">
-                                Папка хранилища
-                            </th>
-                            <th title="Переход к управлению файлами пользователя">
-                                Файлы
-                            </th>
-                            <th title="Действия администратора">Действия</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {items.map((user) => (
-                            <tr key={user.id}>
-                                <td>{user.id}</td>
-
-                                <td>
-                                    <strong>{user.username}</strong>
-                                </td>
-
-                                <td>{user.full_name}</td>
-
-                                <td>{user.email}</td>
-
-                                <td>
-                                    <label className="checkbox-label">
-                                        <input
-                                            type="checkbox"
-                                            checked={user.is_staff}
-                                            onChange={() => toggleAdmin(user)}
-                                            disabled={user.id === currentUser.id}
-                                            title={
-                                                user.id === currentUser.id
-                                                    ? "Нельзя снять права администратора с текущего пользователя"
-                                                    : "Изменить признак администратора"
-                                            }
-                                        />
-
-                                        <span>{user.is_staff ? "Да" : "Нет"}</span>
-                                    </label>
-                                </td>
-
-                                <td>{user.files_count ?? 0}</td>
-
-                                <td>{formatBytes(user.files_size)}</td>
-
-                                <td>
-                                    <code>{user.storage_path}</code>
-                                </td>
-
-                                <td>
-                                    <Link
-                                        className="button small"
-                                        to={`/storage/${user.id}`}
-                                        title="Открыть интерфейс управления файлами этого пользователя"
-                                    >
-                                        Открыть
-                                    </Link>
-                                </td>
-
-                                <td>
-                                    <button
-                                        className="danger"
-                                        onClick={() => handleDelete(user.id, user.username)}
-                                        disabled={user.id === currentUser.id}
-                                        title={
-                                            user.id === currentUser.id
-                                                ? "Нельзя удалить текущего пользователя"
-                                                : "Удалить пользователя и его файлы"
-                                        }
-                                    >
-                                        Удалить
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-
-                        {!items.length && !loading && (
+                <div className="table-wrapper">
+                    <table>
+                        <thead>
                             <tr>
-                                <td colSpan="10">Пользователи не найдены.</td>
+                                <th>ID</th>
+                                <th>Логин</th>
+                                <th>ФИО</th>
+                                <th>Email</th>
+                                <th>Администратор</th>
+                                <th>Файлов</th>
+                                <th>Объём</th>
+                                <th>Действия</th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
-        </section>
+                        </thead>
+
+                        <tbody>
+                            {items.map((user) => {
+                                const isCurrentUser = currentUser?.id === user.id;
+
+                                return (
+                                    <tr key={user.id}>
+                                        <td>{user.id}</td>
+                                        <td>{user.username}</td>
+                                        <td>{user.full_name}</td>
+                                        <td>{user.email}</td>
+
+                                        <td>
+                                            <label className="checkbox-label">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={user.is_staff}
+                                                    disabled={isCurrentUser}
+                                                    onChange={() => handleAdminChange(user)}
+                                                />
+
+                                                <span>{user.is_staff ? "Да" : "Нет"}</span>
+                                            </label>
+                                        </td>
+
+                                        <td>{user.files_count}</td>
+
+                                        <td>{formatBytes(user.files_total_size)}</td>
+
+                                        <td>
+                                            <div className="actions-cell">
+                                                <Link
+                                                    className="button small secondary"
+                                                    to={`/storage/${user.id}`}
+                                                >
+                                                    Открыть хранилище
+                                                </Link>
+
+                                                <button
+                                                    type="button"
+                                                    className="danger small"
+                                                    disabled={isCurrentUser}
+                                                    onClick={() => openDeleteUserModal(user)}
+                                                    title={
+                                                        isCurrentUser
+                                                            ? "Нельзя удалить текущего пользователя"
+                                                            : "Удалить пользователя"
+                                                    }
+                                                >
+                                                    Удалить
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+
+                            {!items.length && !loading && (
+                                <tr>
+                                    <td colSpan="8">Пользователи отсутствуют.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <ConfirmModal
+                open={Boolean(userToDelete)}
+                danger
+                title="Подтверждение удаления пользователя"
+                message={
+                    userToDelete
+                        ? `Вы действительно хотите удалить пользователя "${userToDelete.username}"? Все его файлы также будут удалены.`
+                        : ""
+                }
+                confirmText="Удалить"
+                cancelText="Отмена"
+                onConfirm={confirmDeleteUser}
+                onCancel={closeDeleteUserModal}
+            />
+        </>
     );
 }

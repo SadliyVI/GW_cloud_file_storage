@@ -1,9 +1,9 @@
-from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError as DjangoValidationError
+from rest_framework import serializers
 
 from .models import User
-from .validators import validate_username_rule, validate_password_rule
+from .validators import validate_password_rule, validate_username_rule
 
 
 class UserPublicSerializer(serializers.ModelSerializer):
@@ -36,16 +36,20 @@ class RegisterSerializer(serializers.ModelSerializer):
         try:
             validate_username_rule(value)
         except DjangoValidationError as exc:
-            raise serializers.ValidationError(exc.messages)
+            raise serializers.ValidationError(exc.messages) from exc
 
         if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("Пользователь с таким логином уже существует.")
+            raise serializers.ValidationError(
+                "Пользователь с таким логином уже существует."
+            )
 
         return value
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Пользователь с таким email уже существует.")
+            raise serializers.ValidationError(
+                "Пользователь с таким email уже существует."
+            )
 
         return value
 
@@ -53,7 +57,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         try:
             validate_password_rule(value)
         except DjangoValidationError as exc:
-            raise serializers.ValidationError(exc.messages)
+            raise serializers.ValidationError(exc.messages) from exc
         return value
 
     def create(self, validated_data):
@@ -76,7 +80,9 @@ class LoginSerializer(serializers.Serializer):
 
         user_exists = User.objects.filter(username=username).exists()
         if not user_exists:
-            raise serializers.ValidationError({"username": "Пользователь с таким логином не найден!"})
+            raise serializers.ValidationError(
+                {"username": "Пользователь с таким логином не найден!"}
+            )
 
         user = authenticate(username=username, password=password)
         if not user:
