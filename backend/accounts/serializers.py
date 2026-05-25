@@ -8,7 +8,7 @@ from .validators import validate_password_rule, validate_username_rule
 
 class UserPublicSerializer(serializers.ModelSerializer):
     files_count = serializers.IntegerField(read_only=True)
-    files_size = serializers.IntegerField(read_only=True)
+    files_total_size = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = User
@@ -21,9 +21,8 @@ class UserPublicSerializer(serializers.ModelSerializer):
             "is_superuser",
             "storage_path",
             "files_count",
-            "files_size",
+            "files_total_size",
         ]
-
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=6)

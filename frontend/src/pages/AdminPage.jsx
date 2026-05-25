@@ -29,6 +29,18 @@ function formatBytes(bytes) {
     return `${size.toFixed(1)} ${units[index]}`;
 }
 
+function getComparableValue(value) {
+    if (value === null || value === undefined || value === "") {
+        return "";
+    }
+
+    if (typeof value === "number") {
+        return value;
+    }
+
+    return String(value).toLowerCase();
+}
+
 export default function AdminPage() {
     const dispatch = useDispatch();
 
@@ -36,6 +48,13 @@ export default function AdminPage() {
     const currentUser = useSelector((state) => state.auth.user);
 
     const [userToDelete, setUserToDelete] = useState(null);
+
+
+    const [sortConfig, setSortConfig] = useState({
+        key: "id",
+        direction: "asc"
+    });
+
 
     useEffect(() => {
         dispatch(fetchUsers());
@@ -65,6 +84,50 @@ export default function AdminPage() {
         );
     }
 
+
+    function handleSort(key) {
+        setSortConfig((current) => {
+            if (current.key === key) {
+                return {
+                    key,
+                    direction: current.direction === "asc" ? "desc" : "asc"
+                };
+            }
+
+            return {
+                key,
+                direction: "asc"
+            };
+        });
+    }
+
+    function renderSortArrow(key) {
+        if (sortConfig.key !== key) {
+            return <span className="sort-arrow inactive">↕</span>;
+        }
+
+        return (
+            <span className="sort-arrow">
+                {sortConfig.direction === "asc" ? "▲" : "▼"}
+            </span>
+        );
+    }
+
+    const sortedUsers = [...items].sort((a, b) => {
+        const aValue = getComparableValue(a[sortConfig.key]);
+        const bValue = getComparableValue(b[sortConfig.key]);
+
+        if (aValue < bValue) {
+            return sortConfig.direction === "asc" ? -1 : 1;
+        }
+
+        if (aValue > bValue) {
+            return sortConfig.direction === "asc" ? 1 : -1;
+        }
+
+        return 0;
+    });
+
     return (
         <>
             <section className="card wide">
@@ -90,19 +153,71 @@ export default function AdminPage() {
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Логин</th>
-                                <th>ФИО</th>
+                                <th className="sortable-th" title="Сортировать по ID">
+                                    <button
+                                        type="button"
+                                        className="sortable-th-button"
+                                        onClick={() => handleSort("id")}
+                                    >
+                                        <span>ID</span>
+                                        {renderSortArrow("id")}
+                                    </button>
+                                </th>
+
+                                <th className="sortable-th" title="Сортировать по логину">
+                                    <button
+                                        type="button"
+                                        className="sortable-th-button"
+                                        onClick={() => handleSort("username")}
+                                    >
+                                        <span>Логин</span>
+                                        {renderSortArrow("username")}
+                                    </button>
+                                </th>
+
+                                <th className="sortable-th" title="Сортировать по ФИО">
+                                    <button
+                                        type="button"
+                                        className="sortable-th-button"
+                                        onClick={() => handleSort("full_name")}
+                                    >
+                                        <span>ФИО</span>
+                                        {renderSortArrow("full_name")}
+                                    </button>
+                                </th>
+
                                 <th>Email</th>
+
                                 <th>Администратор</th>
-                                <th>Файлов</th>
-                                <th>Объём</th>
+
+                                <th className="sortable-th" title="Сортировать по количеству файлов">
+                                    <button
+                                        type="button"
+                                        className="sortable-th-button"
+                                        onClick={() => handleSort("files_count")}
+                                    >
+                                        <span>Файлов</span>
+                                        {renderSortArrow("files_count")}
+                                    </button>
+                                </th>
+
+                                <th className="sortable-th" title="Сортировать по объёму файлов">
+                                    <button
+                                        type="button"
+                                        className="sortable-th-button"
+                                        onClick={() => handleSort("files_total_size")}
+                                    >
+                                        <span>Объём</span>
+                                        {renderSortArrow("files_total_size")}
+                                    </button>
+                                </th>
+
                                 <th>Действия</th>
                             </tr>
                         </thead>
 
                         <tbody>
-                            {items.map((user) => {
+                            {sortedUsers.map((user) => {
                                 const isCurrentUser = currentUser?.id === user.id;
 
                                 return (

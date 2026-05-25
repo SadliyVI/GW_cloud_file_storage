@@ -68,7 +68,7 @@ def users_list_view(request):
 
     users = User.objects.annotate(
         files_count=Count("files"),
-        files_size=Coalesce(Sum("files__size"), 0),
+        files_total_size=Coalesce(Sum("files__size"), 0),
     ).order_by("id")
 
     return Response(UserPublicSerializer(users, many=True).data)

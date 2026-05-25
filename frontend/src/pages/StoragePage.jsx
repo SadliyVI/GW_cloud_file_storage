@@ -73,6 +73,18 @@ function saveBlob(blob, filename) {
     window.URL.revokeObjectURL(blobUrl);
 }
 
+function getComparableValue(value) {
+    if (value === null || value === undefined || value === "") {
+        return "";
+    }
+
+    if (typeof value === "number") {
+        return value;
+    }
+
+    return String(value).toLowerCase();
+}
+
 export default function StoragePage() {
     const { userId } = useParams();
     const dispatch = useDispatch();
@@ -90,6 +102,13 @@ export default function StoragePage() {
     const [uploadProgress, setUploadProgress] = useState(null);
     const [downloadProgress, setDownloadProgress] = useState(null);
     const [downloadingFileName, setDownloadingFileName] = useState("");
+
+    const [sortConfig, setSortConfig] = useState({
+        key: "uploaded_at",
+        direction: "desc"
+    });
+
+
 
     useEffect(() => {
         dispatch(fetchFiles(userId));
@@ -247,6 +266,49 @@ export default function StoragePage() {
 
     const isAnotherUserStorage = userId && currentUser?.is_staff;
 
+    function handleSort(key) {
+        setSortConfig((current) => {
+            if (current.key === key) {
+                return {
+                    key,
+                    direction: current.direction === "asc" ? "desc" : "asc"
+                };
+            }
+
+            return {
+                key,
+                direction: "asc"
+            };
+        });
+    }
+
+    function renderSortArrow(key) {
+        if (sortConfig.key !== key) {
+            return <span className="sort-arrow inactive">↕</span>;
+        }
+
+        return (
+            <span className="sort-arrow">
+                {sortConfig.direction === "asc" ? "▲" : "▼"}
+            </span>
+        );
+    }
+
+    const sortedItems = [...items].sort((a, b) => {
+        const aValue = getComparableValue(a[sortConfig.key]);
+        const bValue = getComparableValue(b[sortConfig.key]);
+
+        if (aValue < bValue) {
+            return sortConfig.direction === "asc" ? -1 : 1;
+        }
+
+        if (aValue > bValue) {
+            return sortConfig.direction === "asc" ? 1 : -1;
+        }
+
+        return 0;
+    });
+
     return (
         <>
             <section className="card wide">
@@ -259,7 +321,7 @@ export default function StoragePage() {
 
                         <p className="muted">
                             Здесь можно загружать, скачивать, переименовывать, удалять файлы и
-                            копировать специальные публичные ссылки.
+                            копировать специальные ссылки для публичного доступа к ним.
                         </p>
                     </div>
 
@@ -354,18 +416,59 @@ export default function StoragePage() {
                     <table>
                         <thead>
                             <tr>
-                                <th title="Оригинальное имя файла">Наименование файла</th>
+                                <th className="sortable-th" title="Сортировать по наименованию файла">
+                                    <button
+                                        type="button"
+                                        className="sortable-th-button"
+                                        onClick={() => handleSort("original_name")}
+                                    >
+                                        <span>Наименование файла</span>
+                                        {renderSortArrow("original_name")}
+                                    </button>
+                                </th>
+
                                 <th title="Комментарий пользователя">Комментарий</th>
-                                <th title="Размер файла">Размер</th>
-                                <th title="Дата загрузки файла">Дата загрузки</th>
-                                <th title="Дата последнего скачивания">
-                                    Последнее скачивание
+
+                                <th className="sortable-th" title="Сортировать по размеру файла">
+                                    <button
+                                        type="button"
+                                        className="sortable-th-button"
+                                        onClick={() => handleSort("size")}
+                                    >
+                                        <span>Размер</span>
+                                        {renderSortArrow("size")}
+                                    </button>
+                                </th>
+
+                                <th className="sortable-th" title="Сортировать по дате загрузки файла">
+                                    <button
+                                        type="button"
+                                        className="sortable-th-button"
+                                        onClick={() => handleSort("uploaded_at")}
+                                    >
+                                        <span>Дата загрузки</span>
+                                        {renderSortArrow("uploaded_at")}
+                                    </button>
+                                </th>
+
+                                <th
+                                    className="sortable-th"
+                                    title="Сортировать по дате последнего скачивания"
+                                >
+                                    <button
+                                        type="button"
+                                        className="sortable-th-button"
+                                        onClick={() => handleSort("last_downloaded_at")}
+                                    >
+                                        <span>Последнее скачивание</span>
+                                        {renderSortArrow("last_downloaded_at")}
+                                    </button>
                                 </th>
                             </tr>
                         </thead>
 
                         <tbody>
-                            {items.map((file) => (
+                            {sortedItems.map((file) => (
                                 <tr key={file.id}>
                                     <td>
                                         <div className="file-name-cell">
