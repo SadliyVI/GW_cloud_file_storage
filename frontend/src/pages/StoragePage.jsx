@@ -73,6 +73,206 @@ function saveBlob(blob, filename) {
     window.URL.revokeObjectURL(blobUrl);
 }
 
+function getFileExtension(filename = "") {
+    const parts = filename.split(".");
+
+    if (parts.length < 2) {
+        return "";
+    }
+
+    return parts.pop().toLowerCase();
+}
+
+function isImageFile(file) {
+    const mimeType = file.mime_type || file.content_type || file.type || "";
+    const extension = getFileExtension(file.original_name);
+
+    return (
+        mimeType.startsWith("image/") ||
+        ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(extension)
+    );
+}
+
+function isVideoFile(file) {
+    const mimeType = file.mime_type || file.content_type || file.type || "";
+    const extension = getFileExtension(file.original_name);
+
+    return (
+        mimeType.startsWith("video/") ||
+        ["mp4", "webm", "ogg", "mov", "mkv", "avi"].includes(extension)
+    );
+}
+
+function getFileIconData(filename = "") {
+    const extension = getFileExtension(filename);
+
+    const groups = {
+        pdf: {
+            label: "PDF",
+            className: "file-type-pdf"
+        },
+        doc: {
+            label: "DOC",
+            className: "file-type-doc"
+        },
+        docx: {
+            label: "DOC",
+            className: "file-type-doc"
+        },
+        xls: {
+            label: "XLS",
+            className: "file-type-xls"
+        },
+        xlsx: {
+            label: "XLS",
+            className: "file-type-xls"
+        },
+        csv: {
+            label: "CSV",
+            className: "file-type-xls"
+        },
+        ppt: {
+            label: "PPT",
+            className: "file-type-ppt"
+        },
+        pptx: {
+            label: "PPT",
+            className: "file-type-ppt"
+        },
+        txt: {
+            label: "TXT",
+            className: "file-type-txt"
+        },
+        md: {
+            label: "MD",
+            className: "file-type-txt"
+        },
+        zip: {
+            label: "ZIP",
+            className: "file-type-archive"
+        },
+        rar: {
+            label: "RAR",
+            className: "file-type-archive"
+        },
+        "7z": {
+            label: "7Z",
+            className: "file-type-archive"
+        },
+        tar: {
+            label: "TAR",
+            className: "file-type-archive"
+        },
+        gz: {
+            label: "GZ",
+            className: "file-type-archive"
+        },
+        exe: {
+            label: "EXE",
+            className: "file-type-app"
+        },
+        apk: {
+            label: "APK",
+            className: "file-type-app"
+        },
+        js: {
+            label: "JS",
+            className: "file-type-code"
+        },
+        jsx: {
+            label: "JSX",
+            className: "file-type-code"
+        },
+        ts: {
+            label: "TS",
+            className: "file-type-code"
+        },
+        tsx: {
+            label: "TSX",
+            className: "file-type-code"
+        },
+        py: {
+            label: "PY",
+            className: "file-type-code"
+        },
+        html: {
+            label: "HTML",
+            className: "file-type-code"
+        },
+        css: {
+            label: "CSS",
+            className: "file-type-code"
+        },
+        json: {
+            label: "JSON",
+            className: "file-type-code"
+        },
+        xml: {
+            label: "XML",
+            className: "file-type-code"
+        },
+        mp3: {
+            label: "MP3",
+            className: "file-type-audio"
+        },
+        wav: {
+            label: "WAV",
+            className: "file-type-audio"
+        },
+        flac: {
+            label: "FLAC",
+            className: "file-type-audio"
+        }
+    };
+
+    return (
+        groups[extension] || {
+            label: extension ? extension.toUpperCase().slice(0, 4) : "FILE",
+            className: "file-type-generic"
+        }
+    );
+}
+
+function getFilePreviewUrl(file) {
+    return `/api/storage/files/${file.id}/download/`;
+}
+
+function FileVisual({ file }) {
+    if (isImageFile(file)) {
+        return (
+            <div className="file-visual file-visual-preview">
+                <img
+                    src={getFilePreviewUrl(file)}
+                    alt=""
+                    loading="lazy"
+                />
+            </div>
+        );
+    }
+
+    if (isVideoFile(file)) {
+        return (
+            <div className="file-visual file-visual-preview">
+                <video
+                    src={getFilePreviewUrl(file)}
+                    preload="metadata"
+                    muted
+                />
+                <span className="file-video-play-mark">▶</span>
+            </div>
+        );
+    }
+
+    const icon = getFileIconData(file.original_name);
+
+    return (
+        <div className={`file-visual file-type-icon ${icon.className}`}>
+            <span>{icon.label}</span>
+        </div>
+    );
+}
+
+
 function getComparableValue(value) {
     if (value === null || value === undefined || value === "") {
         return "";
@@ -98,6 +298,10 @@ export default function StoragePage() {
     const [openMenuId, setOpenMenuId] = useState(null);
 
     const [fileToDelete, setFileToDelete] = useState(null);
+
+    const [dragFile, setDragFile] = useState(null);
+    const [, setDragCounter] = useState(0);
+    const [isDragActive, setIsDragActive] = useState(false);
 
     const [uploadProgress, setUploadProgress] = useState(null);
     const [downloadProgress, setDownloadProgress] = useState(null);
@@ -128,21 +332,55 @@ export default function StoragePage() {
         };
     }, []);
 
-    async function handleUpload(event) {
-        event.preventDefault();
+    // async function handleUpload(event) {
+    //     event.preventDefault();
+    //     setLocalError("");
+
+    //     if (!selectedFile) {
+    //         setLocalError("Выберите файл для загрузки.");
+    //         return;
+    //     }
+
+    //     setUploadProgress(0);
+
+    //     const result = await dispatch(
+    //         uploadFile({
+    //             file: selectedFile,
+    //             comment,
+    //             userId,
+    //             onProgress: setUploadProgress
+    //         })
+    //     );
+
+    //     if (uploadFile.fulfilled.match(result)) {
+    //         setUploadProgress(100);
+
+    //         setTimeout(() => {
+    //             setUploadProgress(null);
+    //         }, 700);
+
+    //         setSelectedFile(null);
+    //         setComment("");
+    //         event.target.reset();
+    //     } else {
+    //         setUploadProgress(null);
+    //     }
+    // }
+
+    async function uploadSelectedFile(fileToUpload, uploadComment = "") {
         setLocalError("");
 
-        if (!selectedFile) {
+        if (!fileToUpload) {
             setLocalError("Выберите файл для загрузки.");
-            return;
+            return false;
         }
 
         setUploadProgress(0);
 
         const result = await dispatch(
             uploadFile({
-                file: selectedFile,
-                comment,
+                file: fileToUpload,
+                comment: uploadComment,
                 userId,
                 onProgress: setUploadProgress
             })
@@ -155,11 +393,22 @@ export default function StoragePage() {
                 setUploadProgress(null);
             }, 700);
 
+            return true;
+        }
+
+        setUploadProgress(null);
+        return false;
+    }
+
+    async function handleUpload(event) {
+        event.preventDefault();
+
+        const success = await uploadSelectedFile(selectedFile, comment);
+
+        if (success) {
             setSelectedFile(null);
             setComment("");
             event.target.reset();
-        } else {
-            setUploadProgress(null);
         }
     }
 
@@ -309,8 +558,115 @@ export default function StoragePage() {
         return 0;
     });
 
+    function isNavbarElement(target) {
+        return Boolean(target.closest("nav") || target.closest(".navbar"));
+    }
+
+    function hasDraggedFiles(event) {
+        return Array.from(event.dataTransfer?.types || []).includes("Files");
+    }
+
+    function handlePageDragEnter(event) {
+        if (isNavbarElement(event.target) || !hasDraggedFiles(event)) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        setDragCounter((current) => current + 1);
+        setIsDragActive(true);
+    }
+
+    function handlePageDragOver(event) {
+        if (isNavbarElement(event.target) || !hasDraggedFiles(event)) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        event.dataTransfer.dropEffect = "copy";
+        setIsDragActive(true);
+    }
+
+    function handlePageDragLeave(event) {
+        if (isNavbarElement(event.target) || !hasDraggedFiles(event)) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        setDragCounter((current) => {
+            const next = Math.max(0, current - 1);
+
+            if (next === 0) {
+                setIsDragActive(false);
+            }
+
+            return next;
+        });
+    }
+
+    function handlePageDrop(event) {
+        if (isNavbarElement(event.target) || !hasDraggedFiles(event)) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        setDragCounter(0);
+        setIsDragActive(false);
+        setLocalError("");
+
+        const droppedFile = event.dataTransfer.files?.[0];
+
+        if (!droppedFile) {
+            return;
+        }
+
+        setDragFile(droppedFile);
+    }
+
+    function cancelDragUpload() {
+        setDragFile(null);
+    }
+
+    async function confirmDragUpload() {
+        if (!dragFile) {
+            return;
+        }
+
+        const fileToUpload = dragFile;
+
+        setDragFile(null);
+
+        const success = await uploadSelectedFile(fileToUpload, comment);
+
+        if (success) {
+            setSelectedFile(null);
+            setComment("");
+
+            const fileInput = document.getElementById("storage-file-input");
+
+            if (fileInput) {
+                fileInput.value = "";
+            }
+        }
+    }
+
+
+
     return (
-        <>
+        <div
+            className={`storage-drop-page ${isDragActive ? "drag-active" : ""}`}
+            onDragEnter={handlePageDragEnter}
+            onDragOver={handlePageDragOver}
+            onDragLeave={handlePageDragLeave}
+            onDrop={handlePageDrop}
+        >
             <section className="card wide">
                 <div className="page-header">
                     <div>
@@ -323,6 +679,11 @@ export default function StoragePage() {
                             Здесь можно загружать, скачивать, переименовывать, удалять файлы и
                             копировать специальные ссылки для публичного доступа к ним.
                         </p>
+
+                        <p>
+                            Для загрузки файла нажмите кнопку &quot;Выберите файл&quot; или перетащите, выбранный для загрузки файл, в любое место на странице.
+                        </p>
+
                     </div>
 
                     {currentUser?.is_staff && (
@@ -472,9 +833,13 @@ export default function StoragePage() {
                                 <tr key={file.id}>
                                     <td>
                                         <div className="file-name-cell">
-                                            <span className="file-name-text">
-                                                {file.original_name}
-                                            </span>
+                                            <div className="file-name-main">
+                                                <FileVisual file={file} />
+
+                                                <span className="file-name-text">
+                                                    {file.original_name}
+                                                </span>
+                                            </div>
 
                                             <div className="file-actions-menu-wrap">
                                                 <button
@@ -578,6 +943,20 @@ export default function StoragePage() {
                 onConfirm={confirmDeleteFile}
                 onCancel={closeDeleteFileModal}
             />
-        </>
+
+            <ConfirmModal
+                open={Boolean(dragFile)}
+                title="Подтверждение загрузки файла"
+                message={
+                    dragFile
+                        ? `Загрузить файл "${dragFile.name}" в хранилище?`
+                        : ""
+                }
+                confirmText="Загрузить файл"
+                cancelText="Отмена"
+                onConfirm={confirmDragUpload}
+                onCancel={cancelDragUpload}
+            />
+        </div>
     );
 }

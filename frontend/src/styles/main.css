@@ -979,7 +979,6 @@ button {
     line-height: 1;
 }
 
-
 .sortable-th {
     cursor: pointer;
     user-select: none;
@@ -1032,4 +1031,208 @@ button {
 
 .sort-arrow.inactive {
     color: rgba(231, 236, 255, 0.28);
+}
+
+
+.storage-drop-page {
+    position: relative;
+    min-height: calc(100vh - 72px);
+}
+
+.storage-drop-page.drag-active::before {
+    content: "Отпустите файл для загрузки";
+    position: fixed;
+    inset: 72px 18px 18px 18px;
+    z-index: 90;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 2px dashed rgba(139, 185, 255, 0.8);
+    border-radius: 22px;
+
+    background: rgba(5, 10, 25, 0.58);
+    backdrop-filter: blur(8px);
+
+    color: var(--text);
+    font-size: 26px;
+    font-weight: 900;
+    text-align: center;
+
+    pointer-events: none;
+    box-shadow:
+        0 0 0 9999px rgba(0, 0, 0, 0.22),
+        0 18px 55px rgba(0, 0, 0, 0.35);
+}
+
+.storage-drop-page.drag-active::after {
+    content: "Файл будет добавлен в текущее хранилище";
+    position: fixed;
+    left: 50%;
+    top: calc(50% + 42px);
+    z-index: 91;
+
+    transform: translateX(-50%);
+
+    color: rgba(231, 236, 255, 0.74);
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+
+    pointer-events: none;
+}
+
+.file-name-cell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.file-name-main {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.file-name-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    font-weight: 800;
+}
+
+.file-visual {
+    position: relative;
+    flex: 0 0 auto;
+
+    width: 42px;
+    height: 42px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+    border-radius: 11px;
+    border: 1px solid rgba(231, 236, 255, 0.16);
+
+    background: rgba(231, 236, 255, 0.08);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+.file-visual-preview img,
+.file-visual-preview video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.file-visual-preview::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+
+    background:
+        linear-gradient(180deg,
+            rgba(0, 0, 0, 0.04),
+            rgba(0, 0, 0, 0.28));
+}
+
+.file-video-play-mark {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 2;
+
+    transform: translate(-50%, -50%);
+
+    width: 22px;
+    height: 22px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 999px;
+    background: rgba(5, 10, 25, 0.72);
+    border: 1px solid rgba(231, 236, 255, 0.22);
+
+    color: #ffffff;
+    font-size: 10px;
+    line-height: 1;
+    padding-left: 2px;
+}
+
+.file-type-icon {
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.4px;
+}
+
+.file-type-icon span {
+    position: relative;
+    z-index: 2;
+}
+
+.file-type-icon::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+
+    width: 14px;
+    height: 14px;
+
+    background: rgba(255, 255, 255, 0.24);
+    clip-path: polygon(0 0, 100% 0, 100% 100%);
+}
+
+.file-type-pdf {
+    background: linear-gradient(135deg, #ff496d, #b51f3f);
+}
+
+.file-type-doc {
+    background: linear-gradient(135deg, #5c9dff, #2354d6);
+}
+
+.file-type-xls {
+    background: linear-gradient(135deg, #4bd889, #157a46);
+}
+
+.file-type-ppt {
+    background: linear-gradient(135deg, #ff9b54, #ca4b19);
+}
+
+.file-type-txt {
+    background: linear-gradient(135deg, #9aa7bd, #4b5568);
+}
+
+.file-type-archive {
+    background: linear-gradient(135deg, #ffd166, #a46b00);
+}
+
+.file-type-code {
+    background: linear-gradient(135deg, #a78bfa, #5b21b6);
+}
+
+.file-type-audio {
+    background: linear-gradient(135deg, #34d399, #047857);
+}
+
+.file-type-app {
+    background: linear-gradient(135deg, #f472b6, #be185d);
+}
+
+.file-type-generic {
+    background: linear-gradient(135deg, #6ea8fe, #263f78);
 }
