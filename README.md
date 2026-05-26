@@ -14,9 +14,18 @@
 
 ---
 
+---
+
+[![Cloud icon](frontend/src/assets/cloud_icon.png)](https://www.geonavfilestorage.online)
+
+## [Online version](https://www.geonavfilestorage.online)
+
+---
+
 ## Оглавление
 
 - [Graduate Work - "Cloud File Storage"](#graduate-work---cloud-file-storage)
+  - [Online version](#online-version)
   - [Оглавление](#оглавление)
   - [1. Описание](#1-описание)
   - [1.1. Основные возможности](#11-основные-возможности)

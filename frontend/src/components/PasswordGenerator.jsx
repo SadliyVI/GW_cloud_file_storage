@@ -19,12 +19,16 @@ function generatePassword() {
 }
 
 export default function PasswordGenerator({ onGenerate }) {
+    function handleGenerate() {
+        onGenerate(generatePassword());
+    }
+
     return (
         <button
             type="button"
             className="secondary"
-            title="Сгенерировать пароль, соответствующий требованиям безопасности?"
-            onClick={() => onGenerate(generatePassword())}
+            title="Сгенерировать пароль, соответствующий требованиям безопасности"
+            onClick={handleGenerate}
         >
             Сгенерировать пароль
         </button>

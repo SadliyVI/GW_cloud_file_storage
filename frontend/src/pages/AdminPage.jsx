@@ -41,6 +41,18 @@ function getComparableValue(value) {
     return String(value).toLowerCase();
 }
 
+function getUserFilesSize(user) {
+    return user.files_total_size ?? user.files_size ?? 0;
+}
+
+function getUserSortValue(user, key) {
+    if (key === "files_total_size") {
+        return getUserFilesSize(user);
+    }
+
+    return user[key];
+}
+
 export default function AdminPage() {
     const dispatch = useDispatch();
 
@@ -49,12 +61,10 @@ export default function AdminPage() {
 
     const [userToDelete, setUserToDelete] = useState(null);
 
-
     const [sortConfig, setSortConfig] = useState({
         key: "id",
         direction: "asc"
     });
-
 
     useEffect(() => {
         dispatch(fetchUsers());
@@ -83,7 +93,6 @@ export default function AdminPage() {
             })
         );
     }
-
 
     function handleSort(key) {
         setSortConfig((current) => {
@@ -114,8 +123,8 @@ export default function AdminPage() {
     }
 
     const sortedUsers = [...items].sort((a, b) => {
-        const aValue = getComparableValue(a[sortConfig.key]);
-        const bValue = getComparableValue(b[sortConfig.key]);
+        const aValue = getComparableValue(getUserSortValue(a, sortConfig.key));
+        const bValue = getComparableValue(getUserSortValue(b, sortConfig.key));
 
         if (aValue < bValue) {
             return sortConfig.direction === "asc" ? -1 : 1;
@@ -130,7 +139,7 @@ export default function AdminPage() {
 
     return (
         <>
-            <section className="card wide">
+            <section className="card wide admin-page-card">
                 <div className="page-header">
                     <div>
                         <h1>Административная панель</h1>
@@ -242,7 +251,7 @@ export default function AdminPage() {
 
                                         <td>{user.files_count}</td>
 
-                                        <td>{formatBytes(user.files_total_size)}</td>
+                                        <td>{formatBytes(getUserFilesSize(user))}</td>
 
                                         <td>
                                             <div className="actions-cell">

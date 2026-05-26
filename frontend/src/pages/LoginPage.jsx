@@ -62,6 +62,7 @@ export default function LoginPage({ mode = "user" }) {
         password: ""
     });
 
+    const [showPassword, setShowPassword] = useState(false);
     const [clientErrors, setClientErrors] = useState({});
 
     function updateField(event) {
@@ -166,15 +167,84 @@ export default function LoginPage({ mode = "user" }) {
                     Пароль
 
                     <div className="field-with-tooltip">
-                        <input
-                            name="password"
-                            type="password"
-                            value={form.password}
-                            onChange={updateField}
-                            className={passwordError ? "input-error" : ""}
-                            title="Введите пароль"
-                            autoComplete="current-password"
-                        />
+                        <div className="password-input-wrap">
+                            <input
+                                name="password"
+                                type={showPassword ? "text" : "password"}
+                                value={form.password}
+                                onChange={updateField}
+                                className={passwordError ? "input-error" : ""}
+                                title="Введите пароль"
+                                autoComplete="current-password"
+                            />
+
+                            <button
+                                type="button"
+                                className="password-visibility-button"
+                                onClick={() => setShowPassword((current) => !current)}
+                                aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
+                                title={showPassword ? "Скрыть пароль" : "Показать пароль"}
+                            >
+                                {showPassword ? (
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        width="18"
+                                        height="18"
+                                        aria-hidden="true"
+                                        focusable="false"
+                                    >
+                                        <path
+                                            d="M3 3L21 21"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                        />
+                                        <path
+                                            d="M10.73 5.08A10.9 10.9 0 0 1 12 5c5.25 0 9 5 9 7a8.82 8.82 0 0 1-2.13 3.19M6.61 6.61C4.42 8.09 3 10.39 3 12c0 2 3.75 7 9 7a9.4 9.4 0 0 0 4.39-1.13"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+                                        <path
+                                            d="M9.88 9.88A3 3 0 0 0 14.12 14.12M14.5 9.5A3 3 0 0 0 9.5 14.5"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+                                    </svg>
+                                ) : (
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        width="18"
+                                        height="18"
+                                        aria-hidden="true"
+                                        focusable="false"
+                                    >
+                                        <path
+                                            d="M3 12C3 10 6.75 5 12 5s9 5 9 7-3.75 7-9 7-9-5-9-7Z"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+                                        <circle
+                                            cx="12"
+                                            cy="12"
+                                            r="3"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                        />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
 
                         <FieldTooltip message={passwordError} />
                     </div>

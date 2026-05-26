@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap");
+
 :root {
     --bg: #0b1020;
     --card: #111a33;
@@ -15,6 +17,42 @@
     --shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
     --radius: 14px;
     --radius-sm: 10px;
+
+    --font-body:
+        "Inter",
+        "Manrope",
+        "Segoe UI",
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        Arial,
+        sans-serif;
+
+    --font-ui:
+        "Manrope",
+        "Inter",
+        "Segoe UI",
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        Arial,
+        sans-serif;
+
+    --font-heading:
+        "Playfair Display",
+        "Cormorant Garamond",
+        Georgia,
+        "Times New Roman",
+        serif;
+
+    --font-mono:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        "Liberation Mono",
+        monospace;
 }
 
 * {
@@ -30,14 +68,12 @@ body,
 body {
     min-height: 100%;
     margin: 0;
-    font-family:
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Arial,
-        sans-serif;
+
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
 
     background:
         linear-gradient(rgba(5, 10, 25, 0.6),
@@ -50,6 +86,10 @@ body {
     background-attachment: fixed;
 
     color: var(--text);
+
+    text-rendering: geometricPrecision;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -79,9 +119,11 @@ a:hover {
 }
 
 .navbar__brand {
-    font-weight: 800;
-    font-size: 20px;
-    letter-spacing: 0.3px;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 25px;
+    line-height: 1;
+    letter-spacing: 0.01em;
 }
 
 .navbar__links {
@@ -95,6 +137,11 @@ a:hover {
     color: var(--muted);
     padding: 8px 10px;
     border-radius: 10px;
+
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0;
 }
 
 .navbar__links a:hover,
@@ -105,7 +152,9 @@ a:hover {
 
 .navbar__user {
     color: var(--accent-strong);
-    font-weight: 700;
+    font-family: var(--font-ui);
+    font-weight: 800;
+    font-size: 14px;
     padding: 0 4px;
 }
 
@@ -137,16 +186,29 @@ h1,
 h2,
 h3 {
     color: var(--text);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: 0.005em;
 }
 
 h1 {
     margin-top: 0;
-    font-size: 30px;
+    font-size: 34px;
+    line-height: 1.05;
+}
+
+h2 {
+    line-height: 1.1;
+}
+
+h3 {
     line-height: 1.15;
 }
 
 p {
     color: var(--muted);
+    font-size: 15px;
+    line-height: 1.58;
 }
 
 .muted {
@@ -163,8 +225,12 @@ label {
     display: flex;
     flex-direction: column;
     gap: 7px;
-    font-weight: 700;
+
     color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0;
 }
 
 input,
@@ -176,7 +242,12 @@ select {
     background: rgba(0, 0, 0, 0.22);
     color: var(--text);
     padding: 0 12px;
-    font: inherit;
+
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0;
+
     outline: none;
 }
 
@@ -205,8 +276,12 @@ button,
     color: var(--text);
     padding: 0 14px;
     cursor: pointer;
-    font: inherit;
+
+    font-family: var(--font-ui);
+    font-size: 14px;
     font-weight: 800;
+    letter-spacing: 0.005em;
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -261,7 +336,8 @@ button:disabled {
 .button.small {
     min-height: 34px;
     padding: 0 10px;
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: 800;
 }
 
 .actions {
@@ -310,12 +386,19 @@ td {
 th {
     background: rgba(0, 0, 0, 0.18);
     color: rgba(231, 236, 255, 0.88);
+
+    font-family: var(--font-ui);
     font-weight: 800;
-    font-size: 13px;
+    font-size: 12px;
+    letter-spacing: 0.015em;
 }
 
 td {
     color: rgba(231, 236, 255, 0.88);
+
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
 }
 
 tbody tr:hover {
@@ -350,7 +433,9 @@ tbody tr:last-child td {
 
 .home-hero h1 {
     margin-top: 0;
-    font-size: 38px;
+    font-size: 46px;
+    line-height: 1;
+    letter-spacing: 0.005em;
 }
 
 .home-hero p {
@@ -440,7 +525,10 @@ code {
     border-radius: 6px;
     background: rgba(0, 0, 0, 0.24);
     color: rgba(231, 236, 255, 0.82);
+
+    font-family: var(--font-mono);
     font-size: 13px;
+
     word-break: break-all;
 }
 
@@ -522,11 +610,7 @@ code {
     min-width: 260px;
 }
 
-.file-name-text {
-    font-weight: 800;
-    color: var(--text);
-    word-break: break-word;
-}
+
 
 .file-actions-menu-wrap {
     position: relative;
@@ -553,9 +637,9 @@ code {
 
 .file-actions-dropdown {
     position: absolute;
-    top: calc(100% + 8px);
+    bottom: calc(100% + 8px);
     right: 0;
-    z-index: 80;
+    z-index: 3000;
     min-width: 230px;
     padding: 8px;
     border-radius: 14px;
@@ -568,11 +652,11 @@ code {
 .file-actions-dropdown::before {
     content: "";
     position: absolute;
-    top: -6px;
+    bottom: -6px;
     right: 13px;
     border-left: 6px solid transparent;
     border-right: 6px solid transparent;
-    border-bottom: 6px solid rgba(9, 14, 31, 0.96);
+    border-top: 6px solid rgba(9, 14, 31, 0.96);
 }
 
 .file-action-item {
@@ -795,7 +879,9 @@ code {
 
 .confirm-modal h2 {
     margin: 0 0 8px;
-    font-size: 22px;
+    font-family: var(--font-heading);
+    font-size: 26px;
+    line-height: 1.08;
 }
 
 .confirm-modal p {
@@ -840,14 +926,8 @@ code {
 
 .progress-header strong {
     color: var(--accent-strong);
-    font-family:
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        Monaco,
-        Consolas,
-        "Liberation Mono",
-        monospace;
+    font-family: var(--font-mono);
+    font-weight: 700;
 }
 
 .progress-track {
@@ -1056,8 +1136,10 @@ button {
     backdrop-filter: blur(8px);
 
     color: var(--text);
-    font-size: 26px;
-    font-weight: 900;
+    font-family: var(--font-heading);
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: 0.005em;
     text-align: center;
 
     pointer-events: none;
@@ -1103,7 +1185,11 @@ button {
     text-overflow: ellipsis;
     white-space: nowrap;
 
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 14px;
     font-weight: 800;
+    letter-spacing: 0;
 }
 
 .file-visual {
@@ -1174,9 +1260,10 @@ button {
 
 .file-type-icon {
     color: #ffffff;
+    font-family: var(--font-ui);
     font-size: 10px;
     font-weight: 900;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.04em;
 }
 
 .file-type-icon span {
@@ -1235,4 +1322,1083 @@ button {
 
 .file-type-generic {
     background: linear-gradient(135deg, #6ea8fe, #263f78);
+}
+
+
+.password-input-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.password-input-wrap input {
+    width: 100%;
+    padding-right: 46px;
+}
+
+.password-visibility-button {
+    position: absolute;
+    right: 7px;
+    top: 50%;
+
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+    padding: 0;
+
+    transform: translateY(-50%);
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+    border: 1px solid rgba(11, 16, 32, 0.28);
+    background: rgba(11, 16, 32, 0.12);
+
+    color: #0b1020;
+    cursor: pointer;
+
+    transition:
+        color 0.15s ease,
+        border-color 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.password-visibility-button:hover {
+    color: #ffffff;
+    border-color: rgba(110, 168, 254, 0.74);
+    background: rgba(36, 82, 155, 0.92);
+    box-shadow: 0 0 0 3px rgba(110, 168, 254, 0.18);
+}
+
+.password-visibility-button:focus-visible {
+    outline: none;
+    color: #ffffff;
+    border-color: rgba(110, 168, 254, 0.9);
+    background: rgba(36, 82, 155, 0.96);
+    box-shadow: 0 0 0 3px rgba(110, 168, 254, 0.24);
+}
+
+.password-visibility-button:active {
+    transform: translateY(-50%) scale(0.96);
+}
+
+.password-visibility-button svg {
+    display: block;
+}
+
+
+html,
+body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.container {
+    width: 100%;
+    max-width: min(1180px, calc(100vw - 32px));
+}
+
+.card,
+.card.wide,
+.table-wrapper,
+.upload-form,
+.page-header {
+    min-width: 0;
+}
+
+.table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+}
+
+th,
+td {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+td {
+    vertical-align: top;
+}
+
+.file-name-cell {
+    min-width: 0;
+    width: 100%;
+}
+
+.file-name-main {
+    min-width: 0;
+    max-width: 100%;
+    flex: 1 1 auto;
+}
+
+.file-name-text {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.35;
+}
+
+.file-actions-menu-wrap {
+    flex: 0 0 auto;
+}
+
+td:nth-child(2),
+td:nth-child(3),
+td:nth-child(4),
+td:nth-child(5),
+td:nth-child(6),
+td:nth-child(7),
+td:nth-child(8) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+/* Storage table column widths */
+.storage-drop-page table th:nth-child(1),
+.storage-drop-page table td:nth-child(1) {
+    width: 43%;
+}
+
+.storage-drop-page table th:nth-child(2),
+.storage-drop-page table td:nth-child(2) {
+    width: 18%;
+}
+
+.storage-drop-page table th:nth-child(3),
+.storage-drop-page table td:nth-child(3) {
+    width: 10%;
+}
+
+.storage-drop-page table th:nth-child(4),
+.storage-drop-page table td:nth-child(4) {
+    width: 14%;
+}
+
+.storage-drop-page table th:nth-child(5),
+.storage-drop-page table td:nth-child(5) {
+    width: 15%;
+}
+
+
+
+.actions-cell {
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.actions-cell .button,
+.actions-cell button {
+    white-space: normal;
+    text-align: center;
+}
+
+/* Prevent sortable headers from forcing table width */
+.sortable-th {
+    white-space: normal;
+}
+
+.sortable-th-button {
+    min-width: 0;
+    white-space: normal;
+}
+
+.sortable-th-button span:first-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+@media (max-width: 1000px) {
+    .container {
+        max-width: calc(100vw - 24px);
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .card {
+        padding: 22px;
+    }
+
+    .storage-drop-page table {
+        min-width: 860px;
+    }
+
+    .admin-page-card table {
+        min-width: 920px;
+}
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+}
+
+@media (max-width: 700px) {
+    .storage-drop-page .table-wrapper {
+        border: none;
+        background: transparent;
+        overflow-x: visible;
+    }
+
+    .storage-drop-page table,
+    .storage-drop-page thead,
+    .storage-drop-page tbody,
+    .storage-drop-page th,
+    .storage-drop-page td,
+    .storage-drop-page tr {
+        display: block;
+        width: 100%;
+    }
+
+    .storage-drop-page table {
+        min-width: 0;
+    }
+
+    .storage-drop-page thead {
+        display: none;
+    }
+
+    .storage-drop-page tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .storage-drop-page tbody tr {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+
+        padding: 14px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: rgba(17, 26, 51, 0.54);
+    }
+
+    .storage-drop-page tbody tr:hover {
+        background: rgba(17, 26, 51, 0.62);
+    }
+
+    .storage-drop-page tbody td {
+        border-bottom: none;
+        padding: 0;
+        width: 100% !important;
+    }
+
+    .storage-drop-page tbody td:not(:first-child)::before {
+        display: block;
+        margin-bottom: 4px;
+
+        color: rgba(231, 236, 255, 0.52);
+        font-family: var(--font-ui);
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .storage-drop-page tbody td:nth-child(2)::before {
+        content: "Комментарий";
+    }
+
+    .storage-drop-page tbody td:nth-child(3)::before {
+        content: "Размер";
+    }
+
+    .storage-drop-page tbody td:nth-child(4)::before {
+        content: "Дата загрузки";
+    }
+
+    .storage-drop-page tbody td:nth-child(5)::before {
+        content: "Последнее скачивание";
+    }
+
+    .storage-drop-page .file-name-cell {
+        align-items: flex-start;
+    }
+
+    .storage-drop-page .file-name-main {
+        align-items: flex-start;
+    }
+
+    .storage-drop-page .file-name-text {
+        padding-top: 3px;
+    }
+
+    .storage-drop-page .file-actions-dropdown {
+        right: 0;
+        left: auto;
+    }
+}
+
+@media (max-width: 700px) {
+    .admin-page-card .table-wrapper {
+        border: none;
+        background: transparent;
+        overflow-x: visible;
+    }
+
+    .admin-page-card table,
+    .admin-page-card thead,
+    .admin-page-card tbody,
+    .admin-page-card th,
+    .admin-page-card td,
+    .admin-page-card tr {
+        display: block;
+        width: 100%;
+    }
+
+    .admin-page-card table {
+        min-width: 0;
+    }
+
+    .admin-page-card thead {
+        display: none;
+    }
+
+    .admin-page-card tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .admin-page-card tbody tr {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 9px;
+
+        padding: 14px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: rgba(17, 26, 51, 0.54);
+    }
+
+    .admin-page-card tbody tr:hover {
+        background: rgba(17, 26, 51, 0.62);
+    }
+
+    .admin-page-card tbody td {
+        border-bottom: none;
+        padding: 0;
+        width: 100% !important;
+    }
+
+    .admin-page-card tbody td::before {
+        display: block;
+        margin-bottom: 4px;
+
+        color: rgba(231, 236, 255, 0.52);
+        font-family: var(--font-ui);
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .admin-page-card tbody td:nth-child(1)::before {
+        content: "ID";
+    }
+
+    .admin-page-card tbody td:nth-child(2)::before {
+        content: "Логин";
+    }
+
+    .admin-page-card tbody td:nth-child(3)::before {
+        content: "ФИО";
+    }
+
+    .admin-page-card tbody td:nth-child(4)::before {
+        content: "Email";
+    }
+
+    .admin-page-card tbody td:nth-child(5)::before {
+        content: "Администратор";
+    }
+
+    .admin-page-card tbody td:nth-child(6)::before {
+        content: "Файлов";
+    }
+
+    .admin-page-card tbody td:nth-child(7)::before {
+        content: "Объём";
+    }
+
+    .admin-page-card tbody td:nth-child(8)::before {
+        content: "Действия";
+    }
+
+    .admin-page-card .actions-cell {
+        align-items: stretch;
+    }
+
+    .admin-page-card .actions-cell .button,
+    .admin-page-card .actions-cell button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 520px) {
+    .navbar {
+        gap: 14px;
+    }
+
+    .navbar__brand {
+        font-size: 22px;
+    }
+
+    .navbar__links {
+        width: 100%;
+        gap: 8px;
+    }
+
+    .navbar__links a,
+    .navbar__links button {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+
+    h1 {
+        font-size: 28px;
+    }
+
+    .page-header {
+        gap: 12px;
+    }
+
+    .page-header .button {
+        width: 100%;
+    }
+
+    .file-visual {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+    }
+
+    .file-name-main {
+        gap: 10px;
+    }
+
+    .file-actions-dropdown {
+        min-width: 210px;
+    }
+}
+
+/* =========================
+   Fixed responsive storage/admin table layout
+   ========================= */
+
+/* Хранилище: явно задаём нормальные ширины колонок */
+.storage-drop-page .table-wrapper table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.storage-drop-page .table-wrapper th:nth-child(1),
+.storage-drop-page .table-wrapper td:nth-child(1) {
+    width: 42%;
+}
+
+.storage-drop-page .table-wrapper th:nth-child(2),
+.storage-drop-page .table-wrapper td:nth-child(2) {
+    width: 20%;
+}
+
+.storage-drop-page .table-wrapper th:nth-child(3),
+.storage-drop-page .table-wrapper td:nth-child(3) {
+    width: 10%;
+}
+
+.storage-drop-page .table-wrapper th:nth-child(4),
+.storage-drop-page .table-wrapper td:nth-child(4) {
+    width: 14%;
+}
+
+.storage-drop-page .table-wrapper th:nth-child(5),
+.storage-drop-page .table-wrapper td:nth-child(5) {
+    width: 14%;
+}
+
+/* Имя файла не должно становиться вертикальным */
+.storage-drop-page .file-name-cell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+}
+
+.storage-drop-page .file-name-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.storage-drop-page .file-name-text {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    line-height: 1.35;
+}
+
+.storage-drop-page .file-actions-menu-wrap {
+    flex: 0 0 auto;
+}
+
+/* Комментарий тоже переносится, но не раздвигает таблицу */
+.storage-drop-page .table-wrapper td:nth-child(2) {
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+/* Служебные колонки не должны сжиматься до 1 символа */
+.storage-drop-page .table-wrapper th:nth-child(3),
+.storage-drop-page .table-wrapper td:nth-child(3),
+.storage-drop-page .table-wrapper th:nth-child(4),
+.storage-drop-page .table-wrapper td:nth-child(4),
+.storage-drop-page .table-wrapper th:nth-child(5),
+.storage-drop-page .table-wrapper td:nth-child(5) {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+/* Админская таблица: применять только если таблица НЕ внутри storage-drop-page */
+.admin-page-card .table-wrapper table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.admin-page-card .table-wrapper th:nth-child(1),
+.admin-page-card .table-wrapper td:nth-child(1) {
+    width: 6%;
+}
+
+.admin-page-card .table-wrapper th:nth-child(2),
+.admin-page-card .table-wrapper td:nth-child(2) {
+    width: 13%;
+}
+
+.admin-page-card .table-wrapper th:nth-child(3),
+.admin-page-card .table-wrapper td:nth-child(3) {
+    width: 17%;
+}
+
+.admin-page-card .table-wrapper th:nth-child(4),
+.admin-page-card .table-wrapper td:nth-child(4) {
+    width: 18%;
+}
+
+.admin-page-card .table-wrapper th:nth-child(5),
+.admin-page-card .table-wrapper td:nth-child(5) {
+    width: 12%;
+}
+
+.admin-page-card .table-wrapper th:nth-child(6),
+.admin-page-card .table-wrapper td:nth-child(6) {
+    width: 8%;
+}
+
+.admin-page-card .table-wrapper th:nth-child(7),
+.admin-page-card .table-wrapper td:nth-child(7) {
+    width: 10%;
+}
+
+.admin-page-card .table-wrapper th:nth-child(8),
+.admin-page-card .table-wrapper td:nth-child(8) {
+    width: 16%;
+}
+
+
+
+.form-card input,
+.form-card textarea,
+.form-card select {
+    background: rgba(0, 0, 0, 0.24);
+    color: var(--text);
+    border-color: var(--border);
+}
+
+.form-card input::placeholder,
+.form-card textarea::placeholder {
+    color: rgba(231, 236, 255, 0.42);
+}
+
+.form-card input:focus,
+.form-card textarea:focus,
+.form-card select:focus {
+    border-color: rgba(110, 168, 254, 0.7);
+    box-shadow: 0 0 0 3px rgba(110, 168, 254, 0.12);
+}
+
+.form-card .password-input-wrap input {
+    padding-right: 46px;
+}
+
+.form-card .password-visibility-button {
+    position: absolute;
+    right: 7px;
+    top: 50%;
+
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+    padding: 0;
+
+    transform: translateY(-50%);
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+    border: 1px solid rgba(139, 185, 255, 0.42);
+    background: rgba(110, 168, 254, 0.16);
+
+    color: rgba(231, 236, 255, 0.92);
+    cursor: pointer;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 0 0 1px rgba(0, 0, 0, 0.08);
+
+    transition:
+        color 0.15s ease,
+        border-color 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.form-card .password-visibility-button:hover {
+    color: #ffffff;
+    border-color: rgba(139, 185, 255, 0.8);
+    background: rgba(110, 168, 254, 0.3);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        0 0 0 3px rgba(110, 168, 254, 0.14);
+}
+
+.form-card .password-visibility-button:focus-visible {
+    outline: none;
+    color: #ffffff;
+    border-color: rgba(139, 185, 255, 0.95);
+    background: rgba(110, 168, 254, 0.34);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        0 0 0 3px rgba(110, 168, 254, 0.24);
+}
+
+.form-card .password-visibility-button:active {
+    transform: translateY(-50%) scale(0.96);
+}
+
+.form-card .password-visibility-button svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.2;
+}
+
+.form-card input:-webkit-autofill,
+.form-card input:-webkit-autofill:hover,
+.form-card input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--text);
+    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.24) inset;
+    caret-color: var(--text);
+    transition: background-color 9999s ease-out;
+}
+
+/* =========================
+   Final mobile storage card wrapping fix
+   ========================= */
+
+@media (max-width: 700px) {
+
+    html,
+    body,
+    #root {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 100%;
+        padding-left: 10px;
+        padding-right: 10px;
+        overflow-x: hidden;
+    }
+
+    .storage-drop-page,
+    .storage-drop-page .card,
+    .storage-drop-page .table-wrapper {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: hidden;
+    }
+
+    .storage-drop-page .table-wrapper {
+        border: none;
+        background: transparent;
+        overflow: visible;
+    }
+
+    .storage-drop-page table,
+    .storage-drop-page thead,
+    .storage-drop-page tbody,
+    .storage-drop-page tr,
+    .storage-drop-page th,
+    .storage-drop-page td {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .storage-drop-page table {
+        table-layout: auto;
+        min-width: 0 !important;
+    }
+
+    .storage-drop-page thead {
+        display: none;
+    }
+
+    .storage-drop-page tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .storage-drop-page tbody tr {
+        display: block;
+
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+
+        padding: 14px;
+        overflow: hidden;
+
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: rgba(17, 26, 51, 0.54);
+    }
+
+    .storage-drop-page tbody tr:hover {
+        background: rgba(17, 26, 51, 0.62);
+    }
+
+    .storage-drop-page tbody td {
+        width: 100% !important;
+        max-width: 100%;
+        min-width: 0;
+
+        padding: 0;
+        border-bottom: none;
+        overflow: hidden;
+
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+    }
+
+    .storage-drop-page tbody td+td {
+        margin-top: 12px;
+    }
+
+    .storage-drop-page tbody td:not(:first-child)::before {
+        display: block;
+        margin-bottom: 4px;
+
+        color: rgba(231, 236, 255, 0.52);
+        font-family: var(--font-ui);
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.25;
+    }
+
+    .storage-drop-page tbody td:nth-child(2)::before {
+        content: "Комментарий";
+    }
+
+    .storage-drop-page tbody td:nth-child(3)::before {
+        content: "Размер";
+    }
+
+    .storage-drop-page tbody td:nth-child(4)::before {
+        content: "Дата загрузки";
+    }
+
+    .storage-drop-page tbody td:nth-child(5)::before {
+        content: "Последнее скачивание";
+    }
+
+    /*
+       Главная строка файла:
+       иконка + имя + кнопка меню.
+       minmax(0, 1fr) критически важно для переноса имени.
+    */
+    .storage-drop-page .file-name-cell {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 34px;
+        align-items: flex-start;
+        column-gap: 10px;
+
+        overflow: hidden;
+    }
+
+    .storage-drop-page .file-name-main {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        align-items: flex-start;
+        column-gap: 10px;
+
+        overflow: hidden;
+    }
+
+    .storage-drop-page .file-visual {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        max-width: 42px;
+        flex: none;
+    }
+
+    .storage-drop-page .file-name-text {
+        display: block;
+
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+
+        padding-top: 2px;
+
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+
+        /*
+           Для длинных имён без пробелов.
+           break-word не всегда достаточно, поэтому нужен break-all.
+        */
+        overflow-wrap: anywhere !important;
+        word-wrap: break-word !important;
+        word-break: break-all !important;
+        line-break: anywhere;
+
+        line-height: 1.35;
+    }
+
+    .storage-drop-page .file-actions-menu-wrap {
+        width: 34px;
+        min-width: 34px;
+        max-width: 34px;
+
+        justify-self: end;
+        position: relative;
+    }
+
+    .storage-drop-page .icon-menu-button {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        min-height: 34px;
+    }
+
+    /*
+       Комментарий: это вторая ячейка строки.
+       Принудительно переносим длинные слова/строки.
+    */
+    .storage-drop-page tbody td:nth-child(2) {
+        display: block;
+
+        width: 100% !important;
+        max-width: 100%;
+        min-width: 0;
+
+        white-space: normal !important;
+        overflow: hidden !important;
+        overflow-wrap: anywhere !important;
+        word-wrap: break-word !important;
+        word-break: break-all !important;
+        line-break: anywhere;
+
+        line-height: 1.45;
+    }
+
+    .storage-drop-page tbody td:nth-child(3),
+    .storage-drop-page tbody td:nth-child(4),
+    .storage-drop-page tbody td:nth-child(5) {
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+    }
+
+    .storage-drop-page .file-actions-dropdown {
+        right: 0;
+        left: auto;
+        max-width: calc(100vw - 40px);
+    }
+}
+
+
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2000;
+}
+
+body {
+    padding-top: 68px;
+}
+
+@media (max-width: 800px) {
+    body {
+        padding-top: 150px;
+    }
+}
+
+@media (max-width: 520px) {
+    body {
+        padding-top: 170px;
+    }
+}
+
+/* =========================
+   Storage page larger layout
+   ========================= */
+
+.container {
+    max-width: min(1480px, calc(100vw - 24px));
+    padding-bottom: 18px;
+}
+
+.storage-drop-page .card.wide {
+    width: 100%;
+}
+
+.storage-drop-page .table-wrapper {
+    margin-bottom: 0;
+}
+
+.storage-drop-page .table-wrapper table {
+    width: 100%;
+}
+
+@media (min-width: 1200px) {
+    .container {
+        max-width: min(1560px, calc(100vw - 24px));
+    }
+}
+
+.storage-drop-page .table-wrapper,
+.storage-drop-page table,
+.storage-drop-page tbody,
+.storage-drop-page tr,
+.storage-drop-page td {
+    overflow: visible;
+}
+
+.storage-drop-page .file-actions-menu-wrap {
+    position: relative;
+    z-index: 50;
+}
+
+.storage-drop-page .file-actions-menu-wrap:has(.file-actions-dropdown) {
+    z-index: 3100;
+}
+
+/* =========================
+   Mobile file actions dropdown fix
+   ========================= */
+
+/* =========================
+   Mobile file actions dropdown fix
+   ========================= */
+
+@media (max-width: 700px) {
+
+    .storage-drop-page .table-wrapper,
+    .storage-drop-page table,
+    .storage-drop-page tbody,
+    .storage-drop-page tr,
+    .storage-drop-page td,
+    .storage-drop-page .file-name-cell,
+    .storage-drop-page .file-name-main {
+        overflow: visible !important;
+    }
+
+    .storage-drop-page tbody {
+        padding-bottom: 180px;
+    }
+
+    .storage-drop-page tbody tr {
+        position: relative;
+        overflow: visible !important;
+    }
+
+    .storage-drop-page .file-actions-menu-wrap {
+        position: relative;
+        z-index: 5000;
+        overflow: visible !important;
+    }
+
+    .storage-drop-page .file-actions-menu-wrap:has(.file-actions-dropdown) {
+        z-index: 6000;
+    }
+
+    .storage-drop-page .file-actions-dropdown {
+        top: calc(100% + 8px);
+        bottom: auto;
+        right: 0;
+        left: auto;
+
+        z-index: 7000;
+        min-width: 210px;
+        max-width: calc(100vw - 42px);
+    }
+
+    .storage-drop-page .file-actions-dropdown::before {
+        top: -6px;
+        bottom: auto;
+
+        border-top: none;
+        border-bottom: 6px solid rgba(9, 14, 31, 0.96);
+    }
 }
