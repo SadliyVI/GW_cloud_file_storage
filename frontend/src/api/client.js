@@ -160,5 +160,10 @@ export const api = {
         xhrRequest("GET", url, null, {
             responseType: "blob",
             onDownloadProgress
+        }),
+
+    preview: (url) =>
+        xhrRequest("GET", url, null, {
+            responseType: "blob"
         })
 };

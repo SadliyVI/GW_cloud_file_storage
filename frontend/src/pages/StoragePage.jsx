@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -73,6 +73,7 @@ function saveBlob(blob, filename) {
     window.URL.revokeObjectURL(blobUrl);
 }
 
+
 function getFileExtension(filename = "") {
     const parts = filename.split(".");
 
@@ -101,6 +102,75 @@ function isVideoFile(file) {
         mimeType.startsWith("video/") ||
         ["mp4", "webm", "ogg", "mov", "mkv", "avi"].includes(extension)
     );
+}
+
+function isAudioFile(file) {
+    const mimeType = file.mime_type || file.content_type || file.type || "";
+    const extension = getFileExtension(file.original_name);
+
+    return (
+        mimeType.startsWith("audio/") ||
+        ["mp3", "wav", "ogg", "flac", "m4a", "aac"].includes(extension)
+    );
+}
+
+function isTextFile(file) {
+    const mimeType = file.mime_type || file.content_type || file.type || "";
+    const extension = getFileExtension(file.original_name);
+
+    return (
+        mimeType.startsWith("text/") ||
+        [
+            "txt",
+            "md",
+            "csv",
+            "json",
+            "xml",
+            "html",
+            "htm",
+            "css",
+            "js",
+            "jsx",
+            "ts",
+            "tsx",
+            "py",
+            "log",
+            "ini",
+            "yml",
+            "yaml"
+        ].includes(extension)
+    );
+}
+
+function isPdfFile(file) {
+    const mimeType = file.mime_type || file.content_type || file.type || "";
+    const extension = getFileExtension(file.original_name);
+
+    return mimeType === "application/pdf" || extension === "pdf";
+}
+
+function canPreviewFile(file) {
+    return (
+        isPdfFile(file) ||
+        isImageFile(file) ||
+        isVideoFile(file) ||
+        isAudioFile(file) ||
+        isTextFile(file)
+    );
+}
+
+function getPreviewUnsupportedMessage(file) {
+    const extension = getFileExtension(file.original_name);
+
+    if (["doc", "docx", "xls", "xlsx", "ppt", "pptx"].includes(extension)) {
+        return "Предпросмотр офисных документов браузером напрямую не поддерживается. Скачайте файл или подключите серверный просмотрщик документов.";
+    }
+
+    if (["zip", "rar", "7z", "tar", "gz"].includes(extension)) {
+        return "Предпросмотр архивов не поддерживается. Скачайте файл.";
+    }
+
+    return "Предпросмотр этого типа файла не поддерживается браузером. Скачайте файл.";
 }
 
 function getFileIconData(filename = "") {
@@ -222,6 +292,14 @@ function getFileIconData(filename = "") {
         flac: {
             label: "FLAC",
             className: "file-type-audio"
+        },
+        m4a: {
+            label: "M4A",
+            className: "file-type-audio"
+        },
+        aac: {
+            label: "AAC",
+            className: "file-type-audio"
         }
     };
 
@@ -234,7 +312,7 @@ function getFileIconData(filename = "") {
 }
 
 function getFilePreviewUrl(file) {
-    return `/api/storage/files/${file.id}/download/`;
+    return `/api/storage/files/${file.id}/preview/`;
 }
 
 function FileVisual({ file }) {
@@ -272,7 +350,6 @@ function FileVisual({ file }) {
     );
 }
 
-
 function getComparableValue(value) {
     if (value === null || value === undefined || value === "") {
         return "";
@@ -295,6 +372,7 @@ export default function StoragePage() {
     const [selectedFile, setSelectedFile] = useState(null);
     const [comment, setComment] = useState("");
     const [localError, setLocalError] = useState("");
+    const [rowAlertFileId, setRowAlertFileId] = useState(null);
     const [openMenuId, setOpenMenuId] = useState(null);
 
     const [fileToDelete, setFileToDelete] = useState(null);
@@ -311,8 +389,6 @@ export default function StoragePage() {
         key: "uploaded_at",
         direction: "desc"
     });
-
-
 
     useEffect(() => {
         dispatch(fetchFiles(userId));
@@ -332,40 +408,20 @@ export default function StoragePage() {
         };
     }, []);
 
-    // async function handleUpload(event) {
-    //     event.preventDefault();
-    //     setLocalError("");
+    useEffect(() => {
+        if (!localError) {
+            return undefined;
+        }
 
-    //     if (!selectedFile) {
-    //         setLocalError("Выберите файл для загрузки.");
-    //         return;
-    //     }
+        const timerId = window.setTimeout(() => {
+            setLocalError("");
+            setRowAlertFileId(null);
+        }, 5000);
 
-    //     setUploadProgress(0);
-
-    //     const result = await dispatch(
-    //         uploadFile({
-    //             file: selectedFile,
-    //             comment,
-    //             userId,
-    //             onProgress: setUploadProgress
-    //         })
-    //     );
-
-    //     if (uploadFile.fulfilled.match(result)) {
-    //         setUploadProgress(100);
-
-    //         setTimeout(() => {
-    //             setUploadProgress(null);
-    //         }, 700);
-
-    //         setSelectedFile(null);
-    //         setComment("");
-    //         event.target.reset();
-    //     } else {
-    //         setUploadProgress(null);
-    //     }
-    // }
+        return () => {
+            window.clearTimeout(timerId);
+        };
+    }, [localError]);
 
     async function uploadSelectedFile(fileToUpload, uploadComment = "") {
         setLocalError("");
@@ -398,6 +454,11 @@ export default function StoragePage() {
 
         setUploadProgress(null);
         return false;
+    }
+
+    function showRowAlert(fileId, message) {
+        setRowAlertFileId(fileId);
+        setLocalError(message);
     }
 
     async function handleUpload(event) {
@@ -441,6 +502,70 @@ export default function StoragePage() {
             setDownloadingFileName("");
             setLocalError(getAnyError(error) || "Не удалось скачать файл.");
         }
+    }
+
+    async function handlePreview(file) {
+        setOpenMenuId(null);
+        setLocalError("");
+        setRowAlertFileId(null);
+
+        if (!file?.id) {
+            showRowAlert(null, "Не удалось открыть предпросмотр файла.");
+            return;
+        }
+
+        if (!canPreviewFile(file)) {
+            showRowAlert(file.id, getPreviewUnsupportedMessage(file));
+            return;
+        }
+
+        try {
+            const xhr = await api.preview(`/storage/files/${file.id}/preview/`);
+
+            const contentType =
+                xhr.getResponseHeader("content-type") ||
+                file.mime_type ||
+                file.content_type ||
+                "application/octet-stream";
+
+            const blob = new Blob([xhr.response], {
+                type: contentType
+            });
+
+            const blobUrl = window.URL.createObjectURL(blob);
+            const openedWindow = window.open(blobUrl, "_blank");
+
+            if (!openedWindow) {
+                window.URL.revokeObjectURL(blobUrl);
+
+                showRowAlert(
+                    file.id,
+                    "Браузер заблокировал открытие окна предпросмотра. Разрешите всплывающие окна."
+                );
+
+                return;
+            }
+
+            window.setTimeout(() => {
+                window.URL.revokeObjectURL(blobUrl);
+            }, 60_000);
+        } catch (error) {
+            showRowAlert(
+                file.id,
+                getAnyError(error) || "Не удалось открыть предпросмотр файла."
+            );
+        }
+    }
+
+    function handleRowKeyDown(event, file) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            handlePreview(file);
+        }
+    }
+
+    function stopRowPreview(event) {
+        event.stopPropagation();
     }
 
     function openDeleteFileModal(file) {
@@ -656,9 +781,6 @@ export default function StoragePage() {
             }
         }
     }
-
-
-
     return (
         <div
             className={`storage-drop-page ${isDragActive ? "drag-active" : ""}`}
@@ -681,9 +803,14 @@ export default function StoragePage() {
                         </p>
 
                         <p>
-                            Для загрузки файла нажмите кнопку &quot;Выберите файл&quot; или перетащите, выбранный для загрузки файл, в любое место на странице.
+                            Для загрузки файла нажмите кнопку &quot;Выберите файл&quot; или
+                            перетащите выбранный для загрузки файл в любое место на странице.
                         </p>
 
+                        <p className="muted">
+                            Двойной клик по строке файла открывает предпросмотр, если формат
+                            поддерживается браузером.
+                        </p>
                     </div>
 
                     {currentUser?.is_staff && (
@@ -762,7 +889,9 @@ export default function StoragePage() {
                     />
                 )}
 
-                {localError && <FormAlert type="error" message={localError} />}
+                {localError && rowAlertFileId === null && (
+                    <FormAlert type="error" message={localError} />
+                )}
 
                 {loading && <p className="muted">Загрузка списка файлов...</p>}
 
@@ -829,95 +958,145 @@ export default function StoragePage() {
                         </thead>
 
                         <tbody>
-                            {sortedItems.map((file) => (
-                                <tr key={file.id}>
-                                    <td>
-                                        <div className="file-name-cell">
-                                            <div className="file-name-main">
-                                                <FileVisual file={file} />
+                            {sortedItems.map((file) => {
+                                const previewAvailable = canPreviewFile(file);
 
-                                                <span className="file-name-text">
-                                                    {file.original_name}
-                                                </span>
-                                            </div>
-
-                                            <div className="file-actions-menu-wrap">
-                                                <button
-                                                    type="button"
-                                                    className="icon-menu-button"
-                                                    onClick={(event) => toggleMenu(event, file.id)}
-                                                    title="Открыть меню действий"
-                                                    aria-label="Открыть меню действий"
-                                                >
-                                                    ⋮
-                                                </button>
-
-                                                {openMenuId === file.id && (
-                                                    <div className="file-actions-dropdown">
-                                                        <button
-                                                            type="button"
-                                                            className="file-action-item"
-                                                            onClick={() => handleDownload(file)}
-                                                            title="Скачать файл на локальный диск"
-                                                        >
-                                                            <span className="file-action-icon">⬇</span>
-                                                            <span>Скачать</span>
-                                                        </button>
-
-                                                        <button
-                                                            type="button"
-                                                            className="file-action-item"
-                                                            onClick={() => handleRename(file)}
-                                                            title="Изменить отображаемое имя файла"
-                                                        >
-                                                            <span className="file-action-icon">✎</span>
-                                                            <span>Переименовать</span>
-                                                        </button>
-
-                                                        <button
-                                                            type="button"
-                                                            className="file-action-item"
-                                                            onClick={() => handleComment(file)}
-                                                            title="Изменить комментарий к файлу"
-                                                        >
-                                                            <span className="file-action-icon">💬</span>
-                                                            <span>Комментарий</span>
-                                                        </button>
-
-                                                        <button
-                                                            type="button"
-                                                            className="file-action-item"
-                                                            onClick={() => copyPublicLink(file)}
-                                                            title="Скопировать специальную обезличенную ссылку"
-                                                        >
-                                                            <span className="file-action-icon">🔗</span>
-                                                            <span>Копировать ссылку</span>
-                                                        </button>
-
-                                                        <button
-                                                            type="button"
-                                                            className="file-action-item danger"
-                                                            onClick={() => openDeleteFileModal(file)}
-                                                            title="Удалить файл из хранилища"
-                                                        >
-                                                            <span className="file-action-icon">🗑</span>
-                                                            <span>Удалить</span>
-                                                        </button>
+                                return (
+                                    <Fragment key={file.id}>
+                                        {localError && rowAlertFileId === file.id && (
+                                            <tr className="file-row-alert-tr">
+                                                <td colSpan="5">
+                                                    <div className="file-row-alert-wrap">
+                                                        <FormAlert type="error" message={localError} />
                                                     </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </td>
+                                                </td>
+                                            </tr>
+                                        )}
 
-                                    <td>{file.comment || "—"}</td>
+                                        <tr
+                                            className={`file-row ${previewAvailable ? "file-row-previewable" : ""
+                                                }`}
+                                            onDoubleClick={() => handlePreview(file)}
+                                            onKeyDown={(event) => handleRowKeyDown(event, file)}
+                                            tabIndex={0}
+                                            title={
+                                                previewAvailable
+                                                    ? "Двойной клик — открыть предпросмотр файла"
+                                                    : "Предпросмотр этого типа файла не поддерживается"
+                                            }
+                                        >
+                                            <td>
+                                                <div className="file-name-cell">
+                                                    <div className="file-name-main">
+                                                        <FileVisual file={file} />
 
-                                    <td>{formatBytes(file.size)}</td>
+                                                        <span className="file-name-text">
+                                                            {file.original_name}
+                                                        </span>
+                                                    </div>
 
-                                    <td>{formatDate(file.uploaded_at)}</td>
+                                                    <div
+                                                        className="file-actions-menu-wrap"
+                                                        onClick={stopRowPreview}
+                                                        onDoubleClick={stopRowPreview}
+                                                    >
+                                                        <button
+                                                            type="button"
+                                                            className="icon-menu-button"
+                                                            onClick={(event) => toggleMenu(event, file.id)}
+                                                            onDoubleClick={stopRowPreview}
+                                                            title="Открыть меню действий"
+                                                            aria-label="Открыть меню действий"
+                                                        >
+                                                            ⋮
+                                                        </button>
 
-                                    <td>{formatDate(file.last_downloaded_at)}</td>
-                                </tr>
-                            ))}
+                                                        {openMenuId === file.id && (
+                                                            <div
+                                                                className="file-actions-dropdown"
+                                                                onClick={stopRowPreview}
+                                                                onDoubleClick={stopRowPreview}
+                                                            >
+                                                                <button
+                                                                    type="button"
+                                                                    className="file-action-item"
+                                                                    onClick={() => handlePreview(file)}
+                                                                    title={
+                                                                        previewAvailable
+                                                                            ? "Открыть предпросмотр файла"
+                                                                            : "Предпросмотр этого типа файла не поддерживается"
+                                                                    }
+                                                                >
+                                                                    <span className="file-action-icon">👁</span>
+                                                                    <span>Просмотр</span>
+                                                                </button>
+
+                                                                <button
+                                                                    type="button"
+                                                                    className="file-action-item"
+                                                                    onClick={() => handleDownload(file)}
+                                                                    title="Скачать файл на локальный диск"
+                                                                >
+                                                                    <span className="file-action-icon">⬇</span>
+                                                                    <span>Скачать</span>
+                                                                </button>
+
+                                                                <button
+                                                                    type="button"
+                                                                    className="file-action-item"
+                                                                    onClick={() => handleRename(file)}
+                                                                    title="Изменить отображаемое имя файла"
+                                                                >
+                                                                    <span className="file-action-icon">✎</span>
+                                                                    <span>Переименовать</span>
+                                                                </button>
+
+                                                                <button
+                                                                    type="button"
+                                                                    className="file-action-item"
+                                                                    onClick={() => handleComment(file)}
+                                                                    title="Изменить комментарий к файлу"
+                                                                >
+                                                                    <span className="file-action-icon">💬</span>
+                                                                    <span>Комментарий</span>
+                                                                </button>
+
+                                                                <button
+                                                                    type="button"
+                                                                    className="file-action-item"
+                                                                    onClick={() => copyPublicLink(file)}
+                                                                    title="Скопировать специальную обезличенную ссылку"
+                                                                >
+                                                                    <span className="file-action-icon">🔗</span>
+                                                                    <span>Копировать ссылку</span>
+                                                                </button>
+
+                                                                <button
+                                                                    type="button"
+                                                                    className="file-action-item danger"
+                                                                    onClick={() => openDeleteFileModal(file)}
+                                                                    title="Удалить файл из хранилища"
+                                                                >
+                                                                    <span className="file-action-icon">🗑</span>
+                                                                    <span>Удалить</span>
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            <td>{file.comment || "—"}</td>
+
+                                            <td>{formatBytes(file.size)}</td>
+
+                                            <td>{formatDate(file.uploaded_at)}</td>
+
+                                            <td>{formatDate(file.last_downloaded_at)}</td>
+                                        </tr>
+                                    </Fragment>
+                                );
+                            })}
 
                             {!items.length && !loading && (
                                 <tr>
